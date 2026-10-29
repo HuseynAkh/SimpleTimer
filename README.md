@@ -4,29 +4,17 @@ A time tracker and focus app for iPhone, built to understand how you work. Optio
 
 Pick a session. Start when you're ready. Nothing starts automatically.
 
-![SimpleTimer on iPhone and Apple Watch: a 25-minute session ready to start](docs/release-images/overview.jpg)
+![SimpleTimer: a running timer, a complete week of Activity and Apple Watch controls](docs/release-images/overview.jpg)
 
-### iPhone
-
-<p>
-  <img src="docs/release-images/dashboard-dark.png" alt="Dark timer dashboard" width="230">
-  <img src="docs/release-images/activity.png" alt="Activity overview with sample history" width="230">
-  <img src="docs/release-images/session-editor.png" alt="Duration and colour editor" width="230">
-</p>
-
-### Apple Watch
-
-![Apple Watch gallery: running timer, paused timer and session chooser](docs/release-images/watch-gallery.jpg)
-
-[View the full gallery](docs/GALLERY.md) · Simulator screens with sample data.
+[View full-size screens](docs/GALLERY.md) · Simulator screens with sample data.
 
 ## What it does
 
 - Custom sessions, colours and durations.
 - Swipe between Activity, Timer and Settings, or tap the page dots.
 - System, Light and Dark appearance options.
-- Matching pause, end and restart controls. Restart keeps the elapsed session in history.
-- Pause, resume and end from the app or a Live Activity.
+- Matching Pause, End and Reset controls. Reset stops the timer, restores its full duration and discards the current attempt. Saved history stays intact.
+- Pause, resume, end or reset from the app or a Live Activity.
 - Activity charts and searchable history. Paused time doesn't count.
 - A report you can attach to ChatGPT, Claude or another AI app.
 - JSON history backup and import. Import skips duplicates.
@@ -63,7 +51,7 @@ Use **Save history backup** for a complete JSON copy of finished sessions. Impor
 
 ## Apple Watch
 
-The companion is a remote, not a second timer. It shows the latest iPhone session and lets you start, pause, resume, end or choose a session. The phone owns the saved history. Changes require a reachable paired iPhone. Session selection responds immediately on the Watch while the phone confirms it, and updates sync in the background. Disconnected timer commands are never queued to run later. Open the iPhone app if the Watch asks you to reconnect.
+The companion is a remote, not a second timer. It shows the latest iPhone session and lets you start, pause, resume, end, reset or choose a session. The phone owns the saved history. Changes require a reachable paired iPhone. Session selection responds immediately on the Watch while the phone confirms it, and updates sync in the background. Disconnected timer commands are never queued to run later. Open the iPhone app if the Watch asks you to reconnect.
 
 Sessions use the same colours as iPhone. A checkmark marks your current choice without dimming its name or duration.
 

@@ -24,13 +24,15 @@ final class HistoryTests: XCTestCase {
         XCTAssertEqual(restored.history[0].elapsed, 2700)
         XCTAssertEqual(restored.history[0].outcome, .completed)
     }
-    func testSwitchAndResetArchivePartialSessionsWithoutAutoStart() {
+    func testSwitchSavesPartialSessionButResetDiscardsIt() {
         var state = TimerState(); state.start(at: now)
         state.select(.deepWork, confirmed: true, at: now.addingTimeInterval(30))
         XCTAssertEqual(state.history[0].elapsed, 30); XCTAssertEqual(state.history[0].outcome, .switched)
         XCTAssertEqual(state.session.phase, .ready)
         state.start(at: now.addingTimeInterval(40)); state.reset(confirmed: true, at: now.addingTimeInterval(100))
-        XCTAssertEqual(state.history.count, 2); XCTAssertEqual(state.history[1].elapsed, 60); XCTAssertEqual(state.history[1].outcome, .reset)
+        XCTAssertEqual(state.history.count, 1)
+        XCTAssertEqual(state.session.phase, .ready)
+        XCTAssertEqual(state.session.remaining, 5400)
     }
     func testLegacyStateDecodesWithoutInventingHistory() throws {
         var state = TimerState(); state.start(at: now)

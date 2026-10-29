@@ -32,8 +32,8 @@ public struct WatchCommand: Codable, Sendable {
         if let expiresAt, expiresAt <= now { return false }
         guard sessionID == state.session.id else { return false }
         switch action {
-        case "start": return state.session.phase == .ready
-        case "restart": return !state.session.isActive
+        case "start": return !state.session.isActive
+        case "reset", "restart": return true
         case "pause": return state.session.phase == .running
         case "resume": return state.session.phase == .paused
         case "end": return state.session.isActive

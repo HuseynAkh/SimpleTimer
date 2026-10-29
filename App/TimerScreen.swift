@@ -39,7 +39,7 @@ struct TimerScreen: View {
                     }
                     control(primaryTitle, action: primaryAction, prominent: true)
                     if !typeSize.isAccessibilitySize || session.isActive {
-                        control("Restart", action: "restart", prominent: false)
+                        control("Reset", action: "reset", prominent: false)
                             .opacity(session.isActive ? 1 : 0).disabled(!session.isActive).accessibilityHidden(!session.isActive)
                     }
                 }.frame(maxWidth: .infinity)
@@ -78,10 +78,11 @@ struct TimerScreen: View {
                 .frame(maxWidth: .infinity, minHeight: 44)
                 .contentShape(RoundedRectangle(cornerRadius: 20))
         }.modifier(PrimaryTimerButton(accent: accent, prominent: prominent))
+            .accessibilityHint(action == "reset" ? "Restores the full duration without saving this session." : "")
     }
     private var status: String? { switch session.phase { case .ready, .running: nil; case .paused: "Paused"; case .completed: "Complete"; case .ended: "Ended" } }
     private var primaryTitle: String { switch session.phase { case .running: "Pause"; case .paused: "Resume"; case .completed, .ended: "Start"; case .ready: "Start" } }
-    private var primaryAction: String { switch session.phase { case .running: "pause"; case .paused: "resume"; case .completed, .ended: "restart"; case .ready: "start" } }
+    private var primaryAction: String { switch session.phase { case .running: "pause"; case .paused: "resume"; case .completed, .ended, .ready: "start" } }
     private func act(_ action: String, kind: SessionKind? = nil) { Task { await store.perform(action, kind: kind) } }
 }
 func durationLabel(_ minutes: Int) -> String { minutes >= 60 ? "\(minutes / 60) hr" + (minutes % 60 > 0 ? " \(minutes % 60) min" : "") : "\(minutes) min" }

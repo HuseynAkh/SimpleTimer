@@ -49,19 +49,14 @@ import UserNotifications
         guard storageAvailable, !busy else { return false }
         busy = true; defer { busy = false }
         let previous = state, now = Date()
-        state.reconcile(at: now)
-        switch action {
-        case "start": state.start(at: now)
-        case "restart": state.reset(confirmed: true, at: now); state.start(at: now)
-        case "pause": state.pause(at: now)
-        case "resume": state.resume(at: now)
-        case "end": state.end(at: now)
-        case "reset": state.reset(confirmed: true, at: now)
-        case "select": if let kind { state.select(kind, confirmed: true, at: now) }
-        default: return false
-        }
+        guard state.perform(action, kind: kind, at: now) else { state = previous; return false }
         guard save(publish: publish) else { state = previous; return false }
-        if action == "start" || action == "restart" { activityToCreate = state.session.id }
+        if action == "start" { activityToCreate = state.session.id }
+        if action == "reset" || action == "restart" {
+            activityToCreate = nil
+            notifications.removePendingNotificationRequests(withIdentifiers: ["completion"])
+            notifications.removeDeliveredNotifications(withIdentifiers: ["completion"])
+        }
         effects.submit(state)
         return true
     }
@@ -69,7 +64,7 @@ import UserNotifications
     func perform(_ action: String, kind: SessionKind? = nil) async {
         guard apply(action, kind: kind) else { return }
         // Permission UI belongs to an explicit iPhone action, never a Watch reply.
-        if (action == "start" || action == "restart") && !requestingPermission {
+        if action == "start" && !requestingPermission {
             requestingPermission = true
             Task {
                 defer { requestingPermission = false }
@@ -90,11 +85,16 @@ import UserNotifications
         notifications.removeDeliveredNotifications(withIdentifiers: ["completion"])
         let s = state.session
         let authorization = await notifications.notificationSettings().authorizationStatus
+        guard self.state.session == s else { return }
         if s.phase == .running, let end = s.end, end > Date(),
            authorization == .authorized || authorization == .provisional || authorization == .ephemeral {
             let content = UNMutableNotificationContent(); content.title = "\(s.preset.name) finished"; content.body = "Take a moment. Your next session is up to you."; if state.sound { content.sound = .default }
             let request = UNNotificationRequest(identifier: "completion", content: content, trigger: UNTimeIntervalNotificationTrigger(timeInterval: max(1, end.timeIntervalSinceNow), repeats: false))
             do { try await notifications.add(request) } catch { notice = "Completion alerts are unavailable. Your timer still works." }
+            if self.state.session != s {
+                notifications.removePendingNotificationRequests(withIdentifiers: ["completion"])
+                return
+            }
         }
         let value = TimerAttributes.ContentState(phase: s.phase.rawValue, end: s.end, remaining: s.remaining, duration: s.duration)
         let content = ActivityContent(state: value, staleDate: s.end)

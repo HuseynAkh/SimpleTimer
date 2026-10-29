@@ -15,7 +15,7 @@ struct WatchTimerScreen: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 12) {
+                VStack(spacing: 8) {
                     if let message = store.message {
                         Text(message).font(.caption).foregroundStyle(.secondary).multilineTextAlignment(.center)
                     }
@@ -28,12 +28,25 @@ struct WatchTimerScreen: View {
                         }
                         if session.phase == .paused { Text("Paused").font(.caption) }
                         Button {
-                            store.perform(session.phase == .running ? "pause" : session.phase == .paused ? "resume" : session.phase == .ready ? "start" : "restart")
+                            store.perform(session.phase == .running ? "pause" : session.phase == .paused ? "resume" : "start")
                         } label: {
                             Label(session.phase == .running ? "Pause" : session.phase == .paused ? "Resume" : "Start", systemImage: session.phase == .running ? "pause.fill" : "play.fill")
                                 .frame(maxWidth: .infinity, minHeight: 44)
-                        }.buttonStyle(.borderedProminent).tint(Palette.color(session.preset.color)).foregroundStyle(.black)
-                        if session.isActive { Button("End", role: .destructive) { store.perform("end") } }
+                        }.buttonStyle(.plain).foregroundStyle(.black)
+                            .background(Palette.color(session.preset.color), in: Capsule())
+                        if session.isActive {
+                            HStack(spacing: 8) {
+                                Button(role: .destructive) { store.perform("end") } label: {
+                                    Text("End").frame(maxWidth: .infinity, minHeight: 44)
+                                }.buttonStyle(.plain).foregroundStyle(.red)
+                                    .background(.red.opacity(0.15), in: Capsule())
+                                Button { store.perform("reset") } label: {
+                                    Text("Reset").frame(maxWidth: .infinity, minHeight: 44)
+                                }.buttonStyle(.plain)
+                                    .background(.white.opacity(0.15), in: Capsule())
+                                    .accessibilityHint("Restores the full duration without saving this session.")
+                            }
+                        }
                         NavigationLink("Sessions") {
                             WatchSessionsScreen()
                         }
