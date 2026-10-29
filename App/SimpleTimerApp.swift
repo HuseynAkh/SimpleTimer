@@ -4,6 +4,10 @@ import SwiftUI
     @StateObject private var store = TimerStore.shared
     @AppStorage("appearance") private var appearance: AppAppearance = .system
     @Environment(\.scenePhase) private var scenePhase
+    init() {
+        // Start for background WatchConnectivity launches, before any view task.
+        PhoneConnection.shared.start()
+    }
     var body: some Scene {
         WindowGroup {
             Group {
@@ -12,7 +16,7 @@ import SwiftUI
             }
                 .preferredColorScheme(appearance.colorScheme)
                 .onOpenURL { _ in Task { await store.refresh() } }
-                .task { PhoneConnection.shared.start(); await store.refresh() }
+                .task { await store.refresh() }
                 .onChange(of: scenePhase) { _, phase in if phase == .active { Task { await store.refresh() } } }
         }
     }

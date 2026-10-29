@@ -16,8 +16,10 @@ struct WatchTimerScreen: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 12) {
-                    if let snapshot = store.snapshot {
-                        let session = snapshot.session
+                    if let message = store.message {
+                        Text(message).font(.caption).foregroundStyle(.secondary).multilineTextAlignment(.center)
+                    }
+                    if let session = store.displayedSession {
                         Text(session.preset.name).font(.headline).foregroundStyle(.secondary)
                         TimelineView(.periodic(from: .now, by: 1)) { context in
                             Text(TimerState.clock(session.remaining(at: context.date)))
@@ -30,14 +32,10 @@ struct WatchTimerScreen: View {
                         } label: {
                             Label(session.phase == .running ? "Pause" : session.phase == .paused ? "Resume" : "Start", systemImage: session.phase == .running ? "pause.fill" : "play.fill")
                                 .frame(maxWidth: .infinity, minHeight: 44)
-                        }.buttonStyle(.borderedProminent).tint(Palette.color(session.preset.color)).foregroundStyle(.black).disabled(store.busy)
-                        if session.isActive { Button("End", role: .destructive) { store.perform("end") }.disabled(store.busy) }
+                        }.buttonStyle(.borderedProminent).tint(Palette.color(session.preset.color)).foregroundStyle(.black)
+                        if session.isActive { Button("End", role: .destructive) { store.perform("end") } }
                         NavigationLink("Sessions") {
-                            List(snapshot.presets, id: \.kind) { preset in
-                                WatchSessionRow(preset: preset, selected: preset.kind == store.snapshot?.session.preset.kind) {
-                                    store.perform("select", kind: preset.kind)
-                                }.disabled(store.busy)
-                            }.navigationTitle("Sessions")
+                            WatchSessionsScreen()
                         }
                         Text("iPhone timer").font(.caption2).foregroundStyle(.secondary)
                     } else {
@@ -45,10 +43,30 @@ struct WatchTimerScreen: View {
                         Text("Open SimpleTimer on iPhone").multilineTextAlignment(.center)
                     }
                     if store.busy { ProgressView().accessibilityLabel("Updating timer") }
-                    if let message = store.message { Text(message).font(.caption).foregroundStyle(.secondary).multilineTextAlignment(.center) }
                 }.padding(.horizontal, 6)
             }
-            .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { store.refresh() } label: { Image(systemName: "arrow.clockwise") }.accessibilityLabel("Refresh from iPhone").disabled(store.busy) } }
+            .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { store.refresh(manual: true) } label: { Image(systemName: "arrow.clockwise") }.accessibilityLabel("Refresh from iPhone").disabled(store.refreshing) } }
+        }
+    }
+}
+
+private struct WatchSessionsScreen: View {
+    // Observe the store in the pushed screen itself; a captured navigation
+    // destination can otherwise keep the selection from when it was opened.
+    @EnvironmentObject private var store: WatchStore
+
+    var body: some View {
+        List(store.snapshot?.presets ?? [], id: \.kind) { preset in
+            WatchSessionRow(preset: preset, selected: preset.kind == store.displayedSession?.preset.kind) {
+                store.perform("select", kind: preset.kind)
+            }
+        }
+        .navigationTitle("Sessions")
+        .safeAreaInset(edge: .bottom) {
+            if let message = store.message {
+                Text(message).font(.caption2).multilineTextAlignment(.center)
+                    .padding(6).background(.ultraThinMaterial)
+            }
         }
     }
 }
