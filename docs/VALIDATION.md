@@ -4,7 +4,7 @@ Checked with Xcode 27, an iOS 27 iPhone simulator and a paired watchOS 27 simula
 
 ## Automated
 
-- 27 XCTest cases pass: timer transitions, deadline recovery, persistence, legacy history migration, pause exclusion, duplicate prevention, midnight and DST statistics, custom sessions, backup round-trip and additive import, name redaction, damaged-file recovery and stale watch-command rejection.
+- 36 XCTest cases pass: timer transitions, deadline recovery, persistence, legacy history migration, pause exclusion, duplicate prevention, midnight and DST statistics, custom sessions, backup round-trip and additive import, name redaction, damaged-file recovery and stale watch-command rejection, lost replies, late acknowledgements/errors, out-of-order revisions, rapid selection coalescing, expired commands, old companion compatibility and slow system-effect coalescing.
 - JSON import rejects unsupported versions, oversized input, invalid time bounds and overlapping run intervals.
 - iPhone, Live Activity extension and embedded watch app build for simulator and physical device.
 
@@ -21,11 +21,16 @@ Checked with Xcode 27, an iOS 27 iPhone simulator and a paired watchOS 27 simula
 - Saved a JSON backup through Files, reopened it through Import, and verified that reimporting the same records added zero duplicates.
 - Paired simulator watch start, pause and end commands changed the iPhone timer. End produced one saved history record.
 - Watch session cards share the iPhone colour palette. The current session keeps readable text and a checkmark. Switching between Work and Deep Work, and starting and pausing from Watch, were checked on paired simulators.
-- Signed update installed and launched wirelessly over the existing iPhone app. Every pre-update history record and the saved presets matched after installation. A second check after launch confirmed the original history remained intact.
+- Sync update installed on both paired physical devices using installation commands only. Every pre-update iPhone history record and saved preset matched after installation. Physical screen sharing stayed off; no physical-device interaction test is claimed for this patch.
+
+- Rapid Watch changes (Work → Deep Work → Short Break) converged to the same confirmed session on both simulators. Changes made on iPhone also updated the already-open Watch Sessions screen.
+- Watch Start and Pause produced matching saved session IDs and phases on both simulators. The confirmed paused session survived companion relaunch.
+- A demo iPhone shutdown/reconnect left the confirmed paused timer unchanged; an offline Resume was not replayed.
+- Command receipts and stale/late transport responses are exercised by deterministic tests; simulator checks do not prove physical-device latency.
 
 ## Limits
 
-Watch interface changes are checked on paired simulators; no full physical Watch interaction audit is claimed. Watch commands need a reachable phone. Simulator connectivity may require reopening both apps after pairing and responding to the iPhone's first notification permission prompt.
+Watch interface changes are checked on paired simulators; no full physical Watch interaction audit is claimed. Watch commands need a reachable phone. Fresh simulator installation required reopening the iPhone app once before its connectivity daemon completed registration. Notification permission requests no longer block timer acknowledgements; system effects run separately. A physical reconnect and latency audit still requires user interaction on the devices.
 
 No full spoken VoiceOver audit or iOS 17–25 device run is claimed. Opaque fallbacks are implemented for Reduce Transparency and Increase Contrast. Live Activity and notification code is retained; physical Lock Screen controls, sound under Focus settings and device-reboot behaviour have not been revalidated for this release.
 
