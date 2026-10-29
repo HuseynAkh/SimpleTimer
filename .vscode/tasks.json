@@ -1,0 +1,1 @@
+{"version":"2.0.0","tasks":[{"label":"Test timer core","type":"shell","command":"./scripts/test-core.sh","group":"test","problemMatcher":[]},{"label":"Build iPhone simulator app","type":"shell","command":"./scripts/build-simulator.sh","group":"build","problemMatcher":[]}]}

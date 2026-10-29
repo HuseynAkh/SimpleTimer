@@ -1,0 +1,3 @@
+// Copy to Local.xcconfig and fill these in for device builds. Never commit the local file.
+DEVELOPMENT_TEAM =
+SIMPLETIMER_BUNDLE_ID = org.example.SimpleTimer
