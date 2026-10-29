@@ -69,6 +69,7 @@ struct SimpleTimerLiveActivity: Widget {
                         symbol: context.state.phase == "paused" ? "play.fill" : "pause.fill",
                         label: context.state.phase == "paused" ? "Resume" : "Pause")
                 control(context, action: "end", symbol: "xmark", label: "End timer")
+                control(context, action: "reset", symbol: "arrow.counterclockwise", label: "Reset timer")
             }
         }
     }
@@ -77,6 +78,7 @@ struct SimpleTimerLiveActivity: Widget {
             Image(systemName: symbol).font(.system(size: 16, weight: .medium))
                 .frame(width: 44, height: 44).contentShape(Circle())
         }.buttonStyle(.plain).modifier(ActivityGlassControl()).accessibilityLabel(label)
+            .accessibilityHint(action == "reset" ? "Restores the full duration without saving this session." : "")
     }
     @ViewBuilder private func progress(_ context: ActivityViewContext<TimerAttributes>) -> some View {
         if let end = context.state.end, context.state.phase == "running" {

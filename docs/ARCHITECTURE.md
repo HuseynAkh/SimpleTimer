@@ -6,6 +6,8 @@ The iPhone is the single writer for timer state. `TimerStore` validates, changes
 
 A running timer stores a deadline. Pauses close a running interval; resume opens a new one. Completion is reconciled against the deadline, including after relaunch. History snapshots preserve session names, colours and durations even when a preset changes or is deleted. Existing JSON without history remains readable. Updates keep the same on-device state path.
 
+All timer surfaces use the same core action handler. Reset replaces the current attempt with a fresh, stopped session at its full configured duration. It does not reconcile or archive that attempt; existing saved history, including legacy reset records, stays intact. The old `restart` action is a reset-only compatibility alias. Only an explicit Start begins a new attempt. End still saves elapsed time, and switching to a different session saves the interrupted attempt. Pending completion alerts and Live Activities are cleared when resetting.
+
 The state file is written atomically. The previous decodable save is kept beside it. A damaged primary file can fall back to that save. If both fail, the UI blocks writes instead of replacing history with an empty state. A previous save is a recovery aid, not a substitute for exporting backups.
 
 Notifications and Live Activities are system-managed presentations. Neither guarantees app execution at the deadline. The app reconciles overdue sessions when it runs again. Focus/Silent Mode and notification permissions affect alerts.

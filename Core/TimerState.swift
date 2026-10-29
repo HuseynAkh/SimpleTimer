@@ -114,11 +114,19 @@ public struct TimerState: Codable, Equatable, Sendable {
     @discardableResult public mutating func select(_ kind: SessionKind, confirmed: Bool = false, at now: Date = Date()) -> Bool {
         guard !session.isActive || confirmed else { return false }
         guard let preset = presets.first(where: { $0.kind == kind }) else { return false }
+        if kind == selected { return reset(confirmed: confirmed, at: now) }
         reconcile(at: now)
-        if session.isActive { closeSpan(at: now); archive(kind == selected ? .reset : .switched, at: now) }
+        if session.isActive { closeSpan(at: now); archive(.switched, at: now) }
         selected = kind; session = Session(preset: preset); return true
     }
-    @discardableResult public mutating func reset(confirmed: Bool = false, at now: Date = Date()) -> Bool { select(selected, confirmed: confirmed, at: now) }
+    @discardableResult public mutating func reset(confirmed: Bool = false, at now: Date = Date()) -> Bool {
+        guard !session.isActive || confirmed,
+              let preset = presets.first(where: { $0.kind == selected }) else { return false }
+        // Reset discards only the current attempt. Do not reconcile/archive it,
+        // even if its deadline just passed. Previously saved history stays intact.
+        session = Session(preset: preset)
+        return true
+    }
     public mutating func edit(_ preset: Preset) {
         guard (1...240).contains(preset.minutes), let index = presets.firstIndex(where: { $0.kind == preset.kind }) else { return }
         presets[index] = preset
