@@ -184,10 +184,12 @@ public struct TimerState: Codable, Equatable, Sendable {
         if selected == kind { _ = select(.work); changedAt = Date() }
         return true
     }
-    /// Countdowns round up so 00:00 means done; a stopwatch rounds down so it starts at 00:00.
+    /// Countdowns round up so 0:00 means done; a stopwatch rounds down so it starts at 0:00. Minutes are
+    /// not zero-padded, matching the system-drawn timers in Live Activities and widgets, so a pause
+    /// never changes the text's shape.
     public static func clock(_ seconds: TimeInterval, roundsUp: Bool = true) -> String {
         let value = max(0, seconds), s = Int(roundsUp ? ceil(value) : floor(value)), h = s / 3600, m = (s % 3600) / 60
-        return h > 0 ? String(format: "%d:%02d:%02d", h, m, s % 60) : String(format: "%02d:%02d", m, s % 60)
+        return h > 0 ? String(format: "%d:%02d:%02d", h, m, s % 60) : String(format: "%d:%02d", m, s % 60)
     }
 }
 /// Shared by iPhone and Watch so presets read the same on both.

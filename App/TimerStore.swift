@@ -20,7 +20,9 @@ import UserNotifications
     private var requestingPermission = false
     private lazy var effects = LatestEffectsQueue<TimerState> { [weak self] state in
         guard let self else { return }
-        let create = self.activityToCreate == state.session.id
+        // iOS starts Live Activities only from the foreground. A session the Watch started while this
+        // app ran in the background keeps its request until the app is next opened.
+        let create = self.activityToCreate == state.session.id && UIApplication.shared.applicationState == .active
         if create { self.activityToCreate = nil }
         await self.applySystemEffects(state, create: create)
     }

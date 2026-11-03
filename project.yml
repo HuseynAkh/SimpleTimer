@@ -65,6 +65,12 @@ targets:
         INFOPLIST_KEY_WKApplication: YES
         INFOPLIST_KEY_CFBundleDisplayName: SimpleTimer
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+    # Tapping the iPhone's mirrored Live Activity in the Smart Stack opens this Watch app instead of
+    # offering to open the iPhone app.
+    info:
+      path: WatchApp/Info.plist
+      properties:
+        WKSupportsLiveActivityLaunchAttributeTypes: [TimerAttributes]
     entitlements:
       path: WatchApp/SimpleTimerWatch.entitlements
       properties:

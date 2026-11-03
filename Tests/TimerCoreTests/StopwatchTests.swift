@@ -97,8 +97,9 @@ final class StopwatchTests: XCTestCase {
     }
 
     func testClockRoundsDownForStopwatchAndUpForCountdown() {
-        XCTAssertEqual(TimerState.clock(0.4, roundsUp: false), "00:00")
-        XCTAssertEqual(TimerState.clock(0.4), "00:01")
+        XCTAssertEqual(TimerState.clock(0.4, roundsUp: false), "0:00")
+        XCTAssertEqual(TimerState.clock(0.4), "0:01")
+        XCTAssertEqual(TimerState.clock(9 * 60 + 45), "9:45", "Minutes match the system timer text in Live Activities")
         XCTAssertEqual(TimerState.clock(3725.9, roundsUp: false), "1:02:05")
     }
 
