@@ -21,7 +21,8 @@ struct SimpleTimerLiveActivity: Widget {
                 progress(context)
             }
             .padding(.horizontal, 20).padding(.vertical, 16)
-            .activityBackgroundTint(.black.opacity(0.28))
+            // Near-opaque so white text stays legible over bright wallpapers.
+            .activityBackgroundTint(Color(red: 0.07, green: 0.075, blue: 0.09).opacity(0.9))
             .activitySystemActionForegroundColor(.white)
             .foregroundStyle(.white)
             .widgetURL(URL(string: "simpletimer://timer"))
@@ -41,15 +42,17 @@ struct SimpleTimerLiveActivity: Widget {
                     }.padding(.horizontal, 4).padding(.bottom, 6)
                 }
             } compactLeading: {
-                Image(systemName: context.state.phase == "paused" ? "pause" : "timer")
-                    .foregroundStyle(Palette.color(context.attributes.color))
+                symbol(context)
             } compactTrailing: {
                 countdown(context).monospacedDigit().font(.caption2).frame(maxWidth: 72)
             } minimal: {
-                Image(systemName: context.state.phase == "paused" ? "pause" : "timer")
-                    .foregroundStyle(Palette.color(context.attributes.color))
+                symbol(context)
             }.widgetURL(URL(string: "simpletimer://timer")).keylineTint(Palette.color(context.attributes.color))
         }
+    }
+    private func symbol(_ context: ActivityViewContext<TimerAttributes>) -> some View {
+        Image(systemName: context.state.phase == "paused" ? "pause.fill" : context.attributes.symbol)
+            .foregroundStyle(Palette.color(context.attributes.color))
     }
     private func heading(_ context: ActivityViewContext<TimerAttributes>) -> some View {
         HStack(spacing: 7) {
@@ -68,7 +71,7 @@ struct SimpleTimerLiveActivity: Widget {
                 control(context, action: context.state.phase == "paused" ? "resume" : "pause",
                         symbol: context.state.phase == "paused" ? "play.fill" : "pause.fill",
                         label: context.state.phase == "paused" ? "Resume" : "Pause")
-                control(context, action: "end", symbol: "xmark", label: "End timer")
+                control(context, action: "end", symbol: "stop.fill", label: "End timer")
                 control(context, action: "reset", symbol: "arrow.counterclockwise", label: "Reset timer")
             }
         }
@@ -99,7 +102,7 @@ private struct ActivityGlassControl: ViewModifier {
     @Environment(\.accessibilityReduceTransparency) private var opaque
     @ViewBuilder func body(content: Content) -> some View {
         content
-            .background(.white.opacity(opaque ? 0.25 : 0.12), in: Circle())
+            .background(.white.opacity(opaque ? 0.25 : 0.14), in: Circle())
             .overlay(Circle().strokeBorder(.white.opacity(0.2), lineWidth: 0.5).allowsHitTesting(false))
     }
 }
