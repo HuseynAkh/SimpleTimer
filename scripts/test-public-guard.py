@@ -78,6 +78,11 @@ class PublicGuardTests(unittest.TestCase):
         self.run_git('add', 'sample.p8')
         self.assertNotEqual(self.audit('--staged').returncode, 0)
 
+    def test_generated_project_team_is_blocked(self):
+        (self.root / 'project.pbxproj').write_text('DevelopmentTeam' + ' = ' + 'ABCDE12345;\n')
+        self.run_git('add', 'project.pbxproj')
+        self.assertNotEqual(self.audit('--staged').returncode, 0)
+
     def test_older_commit_blocks_push_even_when_tip_is_clean(self):
         env = dict(self.env, GIT_AUTHOR_EMAIL=PRIVATE, GIT_COMMITTER_EMAIL=PRIVATE)
         self.run_git('commit', '--no-verify', '--allow-empty', '-qm', 'Unsafe test identity', env=env)

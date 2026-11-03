@@ -13,7 +13,7 @@ PATTERNS = {
     'credential': rb'(?:gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|sk-(?:proj-)?[A-Za-z0-9_-]{20,}|AKIA[A-Z0-9]{16})',
     'home directory': rb'/' + rb'Users/[^/\s]+/',
     'device identifier': rb'\b[0-9A-F]{8}-[0-9A-F]{16}\b',
-    'assigned team': rb'DEVELOPMENT_TEAM\s*=\s*[A-Z0-9]{10}\b',
+    'assigned team': rb'(?:DEVELOPMENT_TEAM|DevelopmentTeam)\s*=\s*"?[A-Z0-9]{10}\b',
 }
 PRIVATE_SUFFIXES = {'.p12', '.p8', '.pem', '.mobileprovision', '.key', '.pfx', '.ipa', '.xcarchive', '.xcappdata'}
 issues = set()
