@@ -11,7 +11,7 @@ header p { color: #9cb0c7; font-size: 19px; margin: 0; }
 section { position: absolute; top: 139px; }
 .timer { left: 64px; }
 .activity { left: 506px; }
-.wrist { left: 970px; width: 345px; top: 276px; }
+.wrist { left: 970px; width: 345px; top: 196px; }
 h1, h2 { font-size: 28px; font-weight: 500; letter-spacing: -.65px; margin: 0 0 27px; }
 .wrist h2 { font-size: 38px; letter-spacing: -1.1px; margin-bottom: 13px; }
 .wrist p { color: #a9bed3; font-size: 22px; line-height: 1.45; margin: 0 0 33px; }
@@ -22,5 +22,7 @@ h1, h2 { font-size: 28px; font-weight: 500; letter-spacing: -.65px; margin: 0 0 
 .watch::before { content: ""; position: absolute; right: -12px; top: 80px; width: 15px; height: 48px; background: repeating-linear-gradient(0deg,#414752 0 2px,#727a86 2px 3px); border: 2px solid #3f4651; border-radius: 8px; }
 .watch::after { content: ""; position: absolute; right: -3px; top: 173px; width: 4px; height: 59px; border-radius: 3px; background: linear-gradient(#666f7c,#202733); }
 .watch img { display: block; position: relative; width: 100%; border-radius: 65px; border: 2px solid #030507; background: #000; }
-.note { color: #a9bed3; font-size: 20px; line-height: 1.5; margin-top: 30px; }
+.live { margin-top: 30px; width: 345px; }
+.live img { display: block; width: 100%; border-radius: 26px; box-shadow: 0 0 0 1px #aeb8c240, 0 18px 40px #0007; }
+.note { color: #a9bed3; font-size: 20px; line-height: 1.5; margin-top: 28px; }
 footer { position: absolute; bottom: 42px; left: 64px; font-size: 16px; color: #8399b0; }
