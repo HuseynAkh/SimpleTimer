@@ -108,13 +108,14 @@ public struct TimerState: Codable, Equatable, Sendable {
             let outcome: SessionOutcome = session.isUntimed ? .ended : .completed
             closeSpan(at: finished); archive(outcome, at: finished)
             session.phase = session.isUntimed ? .ended : .completed; session.remaining = 0; session.end = nil
-            // Both devices reach the same deadline, so they agree on when this change happened.
-            changedAt = finished
+            // Reaching a deadline is not a change anyone made, so `changedAt` keeps the last real one. A
+            // device that missed a pause or End elsewhere must not outrank it with this guess.
         }
     }
     public mutating func start(at now: Date) {
         guard session.phase == .ready else { return }
-        session.startedAt = now; session.runningSince = now; session.spans = []; session.pauseCount = 0
+        // Each attempt gets its own ID, so two devices starting the same ready session offline keep both runs.
+        session.id = UUID(); session.startedAt = now; session.runningSince = now; session.spans = []; session.pauseCount = 0
         session.end = now.addingTimeInterval(session.remaining); session.phase = .running
     }
     public mutating func pause(at now: Date) {
@@ -142,8 +143,9 @@ public struct TimerState: Codable, Equatable, Sendable {
         selected = kind; session = Session(preset: preset, untimed: session.isUntimed); session.title = title; return true
     }
     @discardableResult public mutating func reset(confirmed: Bool = false, at now: Date = Date()) -> Bool {
-        guard !session.isActive || confirmed,
-              let preset = presets.first(where: { $0.kind == selected }) else { return false }
+        guard !session.isActive || confirmed else { return false }
+        // A type deleted on the other device can still be selected here; keep using its session's settings.
+        let preset = presets.first { $0.kind == selected } ?? session.preset
         // Reset discards only the current attempt. Do not reconcile/archive it,
         // even if its deadline just passed. Previously saved history stays intact.
         let title = carriedTitle
@@ -157,7 +159,8 @@ public struct TimerState: Codable, Equatable, Sendable {
     }
     /// Switching between timer and stopwatch never interrupts a running or paused session.
     @discardableResult public mutating func setMode(untimed: Bool) -> Bool {
-        guard !session.isActive, let preset = presets.first(where: { $0.kind == selected }) else { return false }
+        guard !session.isActive else { return false }
+        let preset = presets.first { $0.kind == selected } ?? session.preset
         if session.isUntimed != untimed { session = Session(preset: preset, untimed: untimed) }
         return true
     }

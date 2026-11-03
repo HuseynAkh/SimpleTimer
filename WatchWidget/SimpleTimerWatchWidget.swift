@@ -22,17 +22,23 @@ struct SessionProvider: TimelineProvider {
     private var sample: Session { Session(preset: Preset.defaults[0]) }
     func placeholder(in context: Context) -> SessionEntry { SessionEntry(date: .now, session: sample) }
     func getSnapshot(in context: Context, completion: @escaping (SessionEntry) -> Void) {
-        completion(SessionEntry(date: .now, session: WidgetSession.load() ?? sample))
+        let now = Date()
+        completion(SessionEntry(date: now, session: settled(WidgetSession.load() ?? sample, at: now)))
     }
     func getTimeline(in context: Context, completion: @escaping (Timeline<SessionEntry>) -> Void) {
         let now = Date(), session = WidgetSession.load() ?? sample
-        var entries = [SessionEntry(date: now, session: session)]
+        var entries = [SessionEntry(date: now, session: settled(session, at: now))]
         // A countdown that finishes while the app is closed shows as done at its deadline.
         if session.phase == .running, let end = session.end, end > now {
-            var done = session; done.phase = session.isUntimed ? .ended : .completed; done.remaining = 0; done.end = nil
-            entries.append(SessionEntry(date: end, session: done))
+            entries.append(SessionEntry(date: end, session: settled(session, at: end)))
         }
         completion(Timeline(entries: entries, policy: .never))
+    }
+    /// The stored session can outlive its deadline until the Watch app next runs; show it as finished.
+    private func settled(_ session: Session, at date: Date) -> Session {
+        guard session.phase == .running, let end = session.end, end <= date else { return session }
+        var done = session; done.phase = session.isUntimed ? .ended : .completed; done.remaining = 0; done.end = nil
+        return done
     }
 }
 

@@ -96,4 +96,98 @@ final class SyncTests: XCTestCase {
         watch.merge(phone.envelope(from: .phone), at: now)
         XCTAssertEqual(watch.session.preset.kind, .longBreak)
     }
+
+    /// The Watch ends a session while the phone is away; the phone later passes the old deadline and
+    /// guesses a completion. Whichever copy arrives first, both keep the real End.
+    func testAnEndBeforeAMissedDeadlineBeatsTheCompletionGuessedElsewhere() {
+        for phoneFirst in [true, false] {
+            var (phone, watch) = paired()
+            phone.perform("start", at: now)
+            watch.merge(phone.envelope(from: .phone), at: now)
+            watch.perform("end", at: now.addingTimeInterval(600))
+            let later = now.addingTimeInterval(3600)
+            phone.reconcile(at: later)
+            XCTAssertEqual(phone.history.last?.outcome, .completed)
+            if phoneFirst {
+                phone.merge(watch.envelope(from: .watch), at: later)
+                watch.merge(phone.envelope(from: .phone), at: later)
+            } else {
+                let guess = phone.envelope(from: .phone)
+                XCTAssertFalse(watch.merge(guess, at: later), "The Watch keeps its End")
+                phone.merge(watch.envelope(from: .watch), at: later)
+            }
+            XCTAssertEqual(phone.history.count, 1)
+            XCTAssertEqual(phone.history[0].outcome, .ended)
+            XCTAssertEqual(phone.history[0].elapsed, 600, accuracy: 0.001)
+            XCTAssertEqual(phone.session.phase, .ended)
+            XCTAssertEqual(watch.session.phase, .ended)
+        }
+    }
+
+    /// A pause on one device stops the deadline the other device reached unaware; the paused copy
+    /// wins and no completion is saved. Covers timers and stopwatches in both directions.
+    func testAPauseBeatsACompletionGuessedOnTheOtherDevice() {
+        for (untimed, wait) in [(false, 3600.0), (true, Session.stopwatchLimit + 60)] {
+            for phoneFirst in [true, false] {
+                var (phone, watch) = paired()
+                if untimed { phone.perform("stopwatch", at: now) }
+                phone.perform("start", at: now)
+                watch.merge(phone.envelope(from: .phone), at: now)
+                phone.perform("pause", at: now.addingTimeInterval(600))
+                let later = now.addingTimeInterval(wait)
+                watch.reconcile(at: later)
+                XCTAssertTrue(watch.session.reachedDeadline)
+                if phoneFirst {
+                    watch.merge(phone.envelope(from: .phone), at: later)
+                    phone.merge(watch.envelope(from: .watch), at: later)
+                } else {
+                    XCTAssertFalse(phone.merge(watch.envelope(from: .watch), at: later), "The phone keeps its pause")
+                    watch.merge(phone.envelope(from: .phone), at: later)
+                }
+                for state in [phone, watch] {
+                    XCTAssertEqual(state.session.phase, .paused)
+                    XCTAssertEqual(state.session.elapsed(at: later), 600, accuracy: 0.001)
+                    XCTAssertTrue(state.history.isEmpty)
+                }
+            }
+        }
+    }
+
+    func testAResumeElsewhereMovesTheDeadlineThatWasGuessed() {
+        var (phone, watch) = paired()
+        phone.perform("start", at: now)
+        watch.merge(phone.envelope(from: .phone), at: now)
+        watch.perform("pause", at: now.addingTimeInterval(600))
+        watch.perform("resume", at: now.addingTimeInterval(1200))
+        // The phone passes the original deadline first and later hears about the pause.
+        phone.reconcile(at: now.addingTimeInterval(45 * 60 + 1))
+        phone.merge(watch.envelope(from: .watch), at: now.addingTimeInterval(46 * 60))
+        XCTAssertEqual(phone.session.phase, .running)
+        XCTAssertTrue(phone.history.isEmpty)
+        phone.reconcile(at: now.addingTimeInterval(56 * 60))
+        XCTAssertEqual(phone.history.last?.outcome, .completed)
+        XCTAssertEqual(phone.history.last?.finishedAt, now.addingTimeInterval(55 * 60))
+    }
+
+    func testBothDevicesStartingTheSameReadySessionKeepBothRuns() {
+        var (phone, watch) = paired()
+        phone.perform("start", at: now)
+        watch.perform("start", at: now.addingTimeInterval(1800))
+        XCTAssertNotEqual(phone.session.id, watch.session.id)
+        phone.merge(watch.envelope(from: .watch), at: now.addingTimeInterval(1860))
+        XCTAssertEqual(phone.session.id, watch.session.id)
+        XCTAssertEqual(phone.history.last?.outcome, .switched)
+        XCTAssertEqual(phone.history.last?.elapsed ?? 0, 1800, accuracy: 0.001)
+    }
+
+    func testATypeDeletedElsewhereStillResetsAndStarts() {
+        var (phone, _) = paired()
+        phone.perform("select", kind: .longBreak, at: now)
+        phone.perform("start", at: now)
+        phone.presets.removeAll { $0.kind == .longBreak }
+        XCTAssertTrue(phone.perform("reset", at: now.addingTimeInterval(60)))
+        XCTAssertEqual(phone.session.phase, .ready)
+        XCTAssertTrue(phone.perform("start", at: now.addingTimeInterval(61)))
+        XCTAssertEqual(phone.session.preset.kind, .longBreak)
+    }
 }

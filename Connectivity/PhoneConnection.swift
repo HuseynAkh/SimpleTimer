@@ -16,6 +16,8 @@ import WatchConnectivity
     }
 
     @discardableResult func publish(_ state: TimerState, push: Bool = true) -> [String: Any] {
+        // Unreadable saved data leaves a blank placeholder in memory; never let the Watch adopt it.
+        guard TimerStore.shared.storageAvailable else { return [:] }
         let revision = preferences.integer(forKey: "watchSnapshotRevision") + 1
         preferences.set(revision, forKey: "watchSnapshotRevision")
         var payload: [String: Any] = [:]

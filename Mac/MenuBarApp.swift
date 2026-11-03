@@ -1,10 +1,11 @@
 import AppKit
 import ServiceManagement
 import SwiftUI
+import UserNotifications
 
 /// A menu bar item and its drop-down. `LSUIElement` keeps it out of the Dock, and nothing but the item
 /// exists until the drop-down opens.
-@main @MainActor final class MenuBarApp: NSObject, NSApplicationDelegate {
+@main @MainActor final class MenuBarApp: NSObject, NSApplicationDelegate, UNUserNotificationCenterDelegate {
     static func main() {
         #if DEBUG
         if let index = CommandLine.arguments.firstIndex(of: "--render-panel"), CommandLine.arguments.indices.contains(index + 1) {
@@ -35,9 +36,17 @@ import SwiftUI
         // Managers open a hidden item with a synthetic click or an accessibility press; act on mouse up for both buttons.
         button.sendAction(on: [.leftMouseUp, .rightMouseUp])
         store.changed = { [weak self] in self?.update() }
+        UNUserNotificationCenter.current().delegate = self
         store.refresh()
         item.isVisible = true
     }
+    /// Opening the app from Spotlight makes it active with no window, and macOS hides an active app's
+    /// alerts unless it asks to show them.
+    nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification) async -> UNNotificationPresentationOptions {
+        [.banner, .sound, .list]
+    }
+    /// Quit and ⌘Q skip closing the drop-down, so a name still being typed is saved here.
+    func applicationWillTerminate(_ notification: Notification) { store.commitDraft() }
     /// Opening the app again from Finder or Spotlight shows the drop-down, even when its item is hidden.
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
         if panel == nil && item != nil { open() }
@@ -45,7 +54,8 @@ import SwiftUI
     }
 
     @objc private func clicked() {
-        let event = NSApp.currentEvent
+        // An accessibility press brings no event of its own, so only a fresh mouse up on this item says which click it was.
+        let event = NSApp.currentEvent.flatMap { $0.window === item.button?.window && ProcessInfo.processInfo.systemUptime - $0.timestamp < 0.5 ? $0 : nil }
         // Managers move items with ⌘-drags, and Thaw can follow a synthetic click with a second mouse up.
         guard event?.modifierFlags.contains(.command) != true, Date().timeIntervalSince(toggledAt) > 0.3 else { return }
         toggledAt = Date()
@@ -61,6 +71,8 @@ import SwiftUI
         panel.onClose = { [weak self] in self?.close() }
         panel.onSpace = { [weak self] in guard let store = self?.store else { return }; store.act(store.state.session.primaryAction) }
         self.panel = panel
+        // Without this, AppKit focuses the stopwatch name field and Space types instead of starting.
+        panel.initialFirstResponder = host
         panel.makeKeyAndOrderFront(nil)
         outsideClicks = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown, .otherMouseDown]) { [weak self] _ in
             MainActor.assumeIsolated { self?.close() }

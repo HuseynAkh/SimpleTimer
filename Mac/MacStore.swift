@@ -71,7 +71,7 @@ import UserNotifications
     }
     private func save() -> Bool {
         guard let file else { return true }
-        do { try file.save(state); return true } catch { notice = "Could not save the timer."; return false }
+        do { try file.save(state); notice = nil; return true } catch { notice = "Could not save the timer."; return false }
     }
     private func didChange() { changed?(); if file != nil { alerts.submit(state.session) } }
     private func syncDraft() {

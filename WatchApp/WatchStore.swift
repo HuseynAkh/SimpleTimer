@@ -32,9 +32,10 @@ import WidgetKit
 
     /// Runs when the app becomes active and when a timer reaches zero.
     func refresh() {
+        // Take in the phone's latest copy before settling deadlines here, so a pause or End made there wins.
+        if let data = WCSession.default.receivedApplicationContext["sync"] as? Data { receive(data) }
         let before = state
         state.reconcile(at: Date())
-        if let data = WCSession.default.receivedApplicationContext["sync"] as? Data { receive(data) }
         if state != before { unsynced = true; persist() }
         // Keep the widget current even when nothing changed, such as after an update or reinstall.
         if WidgetSession.save(state.session) { WidgetCenter.shared.reloadAllTimelines() }
@@ -51,10 +52,11 @@ import WidgetKit
         guard reachable else { return }
         let id = UUID(); awaitingReply = id
         session.sendMessage(["sync": data], replyHandler: { reply in
-            let data = reply["sync"] as? Data
+            // An error reply means the phone could not take the change in, so it stays queued.
+            let data = reply["error"] == nil ? reply["sync"] as? Data : nil
             Task { @MainActor in
-                self.awaitingReply = nil; self.reachable = true; self.deliveredChange = sent
-                if let data { self.receive(data) }
+                self.awaitingReply = nil; self.reachable = true
+                if let data { self.deliveredChange = sent; self.receive(data) }
             }
         }, errorHandler: { _ in
             // Reachability can lag; a failed send is the clearer signal that the phone is away.
