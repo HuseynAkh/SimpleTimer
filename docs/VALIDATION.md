@@ -49,6 +49,7 @@ Checked with Xcode 27, an iOS 27 iPhone simulator and a paired watchOS 27 simula
   - "Syncs with iPhone later" now sits under the clock, so it shows without scrolling on the 49 mm Watch.
   - While the iPhone was away, the label disappeared for about 5 seconds after each tap, because the Watch trusted a stale `isReachable`. It now appears only after a send error or timeout, or when the phone reports itself unreachable. It stays until a reply arrives.
   - It no longer flashes on taps made 0.96 to 2.5 seconds after launch with the phone present. It first appears about 5 seconds after the phone leaves, and the buttons move down once.
+- While a session runs, the Watch screen shows only the name, clock, status and controls, and Sessions is one scroll down. Checked on a 46 mm watchOS 27 simulator while running, paused, and with "Syncs with iPhone later" showing; nothing overlapped and Sessions still opened its list. Before a session starts, Sessions stays on screen.
 - Not covered by that pass: completion alerts and sound, the Dynamic Island, circular, corner and inline complications, the 12-hour limit, accessibility text sizes, VoiceOver, Reduce Motion, export and import, and light mode beyond one screen. The Live Activity mirrored on the Watch shows the app name, symbol and time but not the session name; it has no Watch-specific layout.
 
 ## Mac
