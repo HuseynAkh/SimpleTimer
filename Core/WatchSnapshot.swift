@@ -40,7 +40,7 @@ public struct WatchCommand: Codable, Sendable {
         case "end": return state.session.isActive
         case "select": return kind != nil && state.presets.contains { $0.kind == kind }
         case "timer", "stopwatch": return !state.session.isActive
-        case "title": return state.session.isActive
+        case "title": return state.session.isActive || state.session.phase == .ready
         default: return false
         }
     }

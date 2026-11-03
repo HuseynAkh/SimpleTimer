@@ -53,6 +53,7 @@ struct TimerScreen: View {
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: typeSize.isAccessibilitySize ? 1 : 2), spacing: 12) {
                     ForEach(store.state.presets, id: \.kind) { preset in
                         Button {
+                            titleFocused = false
                             guard preset.kind != store.state.selected else { return }
                             // A stray tap must not end a running session.
                             if session.isActive { switching = preset } else { act("select", kind: preset.kind) }
@@ -84,6 +85,7 @@ struct TimerScreen: View {
         .onChange(of: session.id) { _, _ in syncTitle() }
         .onChange(of: session.title) { _, _ in if !titleFocused { syncTitle() } }
         .onChange(of: session.phase) { _, _ in syncTitle() }
+        .onChange(of: untimed) { _, _ in titleDraft = "" }
         .onChange(of: titleFocused) { _, focused in if !focused { commitTitle() } }
         .alert("Timer notice", isPresented: Binding(get: { store.notice != nil }, set: { if !$0 { store.notice = nil } })) {
             Button("OK") { store.notice = nil }
@@ -123,10 +125,15 @@ struct TimerScreen: View {
         }.buttonStyle(.plain).modifier(GlassSurface(shape: .circle))
             .accessibilityLabel(untimed ? "Switch to timer" : "Switch to stopwatch")
     }
-    /// Each new stopwatch session starts unnamed; a finished one keeps its name in history only.
-    private func syncTitle() { titleDraft = session.phase == .ended || session.phase == .completed ? "" : session.title ?? "" }
+    /// A finished session keeps its name in history only, so the next one starts unnamed. Before Start,
+    /// an unsaved name survives changing the session type.
+    private func syncTitle() {
+        if session.phase == .ended || session.phase == .completed { titleDraft = "" }
+        else if let title = session.title { titleDraft = title }
+        else if session.isActive { titleDraft = "" }
+    }
     private func commitTitle() {
-        guard session.isActive, TimerState.normalizedTitle(titleDraft) != session.title else { return }
+        guard session.isActive || session.phase == .ready, TimerState.normalizedTitle(titleDraft) != session.title else { return }
         act("title", title: titleDraft)
     }
     /// One large primary action. End and Reset join it as round icon buttons only while a session is active.

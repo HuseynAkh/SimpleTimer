@@ -39,7 +39,8 @@ struct WatchTimerScreen: View {
                         }
                         Button {
                             let action = session.phase == .running ? "pause" : session.phase == .paused ? "resume" : "start"
-                            store.perform(action, title: action == "start" && session.isUntimed ? name : nil)
+                            // An empty field keeps any name already set on iPhone.
+                            store.perform(action, title: action == "start" && session.isUntimed && !name.isEmpty ? name : nil)
                             if action == "start" { name = "" }
                         } label: {
                             Label(session.phase == .running ? "Pause" : session.phase == .paused ? "Resume" : "Start", systemImage: session.phase == .running ? "pause.fill" : "play.fill")

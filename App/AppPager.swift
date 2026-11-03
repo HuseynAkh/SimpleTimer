@@ -41,6 +41,8 @@ struct AppPager: View {
             .scrollIndicators(.hidden)
         }.clipped()
         .overlay(alignment: .bottom) { pageControls.padding(.bottom, 8) }
+        // Every text field sits near the top of its page, so the keyboard never needs to push layout or the dots.
+        .ignoresSafeArea(.keyboard, edges: .bottom)
         .background {
             if currentPage == .timer { DashboardBackground(accent: Palette.color(store.state.session.preset.color)) }
             else { AppBackground() }

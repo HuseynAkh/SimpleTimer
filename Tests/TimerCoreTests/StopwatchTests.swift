@@ -45,12 +45,34 @@ final class StopwatchTests: XCTestCase {
         XCTAssertNil(state.suggestedNext())
     }
 
-    func testEmptyTitleIsDroppedAndRenameNeedsAnActiveSession() {
+    func testEmptyTitleIsDroppedAndFinishedSessionsCannotBeRenamed() {
         var state = stopwatch()
-        XCTAssertFalse(state.perform("title", title: "Early", at: now))
         state.perform("start", title: "   ", at: now)
         XCTAssertNil(state.session.title)
+        state.perform("end", at: now.addingTimeInterval(60))
+        XCTAssertFalse(state.perform("title", title: "Late", at: now.addingTimeInterval(61)))
         XCTAssertEqual(TimerState.normalizedTitle(String(repeating: "a", count: 90))?.count, 60)
+    }
+
+    func testNameSetBeforeStartFollowsTypeChangesAndResets() {
+        var state = stopwatch()
+        XCTAssertTrue(state.perform("title", title: "Chapter three", at: now))
+        state.perform("select", kind: .deepWork, at: now)
+        state.perform("select", kind: .longBreak, at: now)
+        XCTAssertEqual(state.session.title, "Chapter three")
+        XCTAssertTrue(WatchCommand(action: "title", sessionID: state.session.id, title: "x").isValid(for: state, at: now))
+        state.perform("start", at: now)
+        state.perform("reset", at: now.addingTimeInterval(30))
+        XCTAssertEqual(state.session.title, "Chapter three")
+        state.perform("start", at: now.addingTimeInterval(40))
+        state.perform("end", at: now.addingTimeInterval(100))
+        XCTAssertEqual(state.history.last?.title, "Chapter three")
+        state.perform("start", at: now.addingTimeInterval(200))
+        XCTAssertNil(state.session.title, "A new session after End starts unnamed")
+        state.perform("reset", at: now.addingTimeInterval(201))
+        state.perform("title", title: "Kept?", at: now.addingTimeInterval(202))
+        state.perform("timer", at: now.addingTimeInterval(203))
+        XCTAssertNil(state.session.title, "Switching to the timer drops the stopwatch name")
     }
 
     func testForgottenStopwatchStopsAtTheLimit() {

@@ -129,15 +129,22 @@ public struct TimerState: Codable, Equatable, Sendable {
         if kind == selected { return reset(confirmed: confirmed, at: now) }
         reconcile(at: now)
         if session.isActive { closeSpan(at: now); archive(.switched, at: now) }
-        selected = kind; session = Session(preset: preset, untimed: session.isUntimed); return true
+        let title = carriedTitle
+        selected = kind; session = Session(preset: preset, untimed: session.isUntimed); session.title = title; return true
     }
     @discardableResult public mutating func reset(confirmed: Bool = false, at now: Date = Date()) -> Bool {
         guard !session.isActive || confirmed,
               let preset = presets.first(where: { $0.kind == selected }) else { return false }
         // Reset discards only the current attempt. Do not reconcile/archive it,
         // even if its deadline just passed. Previously saved history stays intact.
-        session = Session(preset: preset, untimed: session.isUntimed)
+        let title = carriedTitle
+        session = Session(preset: preset, untimed: session.isUntimed); session.title = title
         return true
+    }
+    /// A stopwatch name chosen before Start, or while running, follows the user across type changes
+    /// and resets. A finished session's name stays with its history record only.
+    private var carriedTitle: String? {
+        session.isUntimed && session.phase != .ended && session.phase != .completed ? session.title : nil
     }
     /// Switching between timer and stopwatch never interrupts a running or paused session.
     @discardableResult public mutating func setMode(untimed: Bool) -> Bool {
@@ -152,7 +159,7 @@ public struct TimerState: Codable, Equatable, Sendable {
     public mutating func edit(_ preset: Preset) {
         guard (1...240).contains(preset.minutes), let index = presets.firstIndex(where: { $0.kind == preset.kind }) else { return }
         presets[index] = preset
-        if session.phase == .ready && selected == preset.kind { session = Session(preset: preset, untimed: session.isUntimed) }
+        if session.phase == .ready && selected == preset.kind { let title = carriedTitle; session = Session(preset: preset, untimed: session.isUntimed); session.title = title }
     }
     public mutating func restoreDefaults() { presets = Preset.defaults + presets.filter { $0.kind.isCustom }; if session.phase == .ready { _ = reset() } }
     @discardableResult public mutating func addPreset(name: String, minutes: Int, color: String) -> SessionKind? {

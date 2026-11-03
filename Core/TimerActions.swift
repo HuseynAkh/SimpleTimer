@@ -7,7 +7,7 @@ extension TimerState {
         case "timer", "stopwatch":
             return setMode(untimed: action == "stopwatch")
         case "title":
-            guard session.isActive else { return false }
+            guard session.isActive || session.phase == .ready else { return false }
             session.title = Self.normalizedTitle(title)
         case "reset", "restart":
             // Keep the old wire action as a reset-only alias during app updates.
