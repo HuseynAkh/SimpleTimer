@@ -16,6 +16,10 @@ struct ActivityScreen: View {
                 ToolbarItem(placement: .topBarLeading) {
                     NavigationLink { ExportScreen() } label: { Image(systemName: "square.and.arrow.up") }.accessibilityLabel("Export activity")
                 }
+                ToolbarItem(placement: .topBarTrailing) {
+                    NavigationLink { HistoryView(records: store.state.records(at: Date())).navigationTitle("History").background { AppBackground() } }
+                        label: { Image(systemName: "clock.arrow.circlepath") }.accessibilityLabel("All history")
+                }
             }
         }
     }
@@ -51,10 +55,11 @@ private struct StatisticsView: View {
             VStack(spacing: 18) {
                 rangeNavigation
                 summaryCard
-                LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: typeSize.isAccessibilitySize ? 1 : 2), spacing: 12) {
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: typeSize.isAccessibilitySize ? 1 : 3), spacing: 12) {
                     metric("Sessions", value: "\(shown.sessions.count)")
-                    metric("Completion rate", value: shown.completionRate.map { "\(Int(($0 * 100).rounded()))%" } ?? "—")
-
+                    metric("Completed", value: shown.completionRate.map { "\(Int(($0 * 100).rounded()))%" } ?? "–")
+                    let streak = SessionStatistics.streak(records: records, now: now)
+                    metric("Streak", value: streak == 1 ? "1 day" : "\(streak) days")
                 }
                 if !shown.sessions.isEmpty {
                     DisclosureGroup("Session breakdown") {
@@ -65,18 +70,9 @@ private struct StatisticsView: View {
                         }.padding(.top, 12)
                     }.activityCard()
                 }
-                NavigationLink {
-                    HistoryView(records: shown.sessions).navigationTitle("Sessions").background { AppBackground() }
-                } label: {
-                    HStack { Label("View sessions", systemImage: "clock.arrow.circlepath"); Spacer(); Image(systemName: "chevron.right").font(.caption) }
-                        .font(.subheadline).padding(18).contentShape(Rectangle())
-                }.buttonStyle(.plain).modifier(ContentSurface())
                 recentSessions
                 if records.isEmpty {
                     Text("Your sessions will appear here as you use the timer.").font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center).padding(.vertical, 12)
-                } else {
-                    Text("\(SessionStatistics.streak(records: records, now: now)) day focus streak · Pauses excluded")
-                        .font(.caption).foregroundStyle(.secondary).padding(.vertical, 6)
                 }
             }.padding(.horizontal, 20).padding(.bottom, 28)
         }
@@ -128,14 +124,14 @@ private struct StatisticsView: View {
                 }.activityCard()
     }
     @ViewBuilder private var recentSessions: some View {
-                if !records.isEmpty {
+                if !shown.sessions.isEmpty {
                     VStack(alignment: .leading, spacing: 8) {
                         HStack {
-                            Text("Recent sessions").font(.headline)
+                            Text("Sessions").font(.headline)
                             Spacer()
-                            NavigationLink("All history") { HistoryView(records: records).navigationTitle("History").background { AppBackground() } }
+                            NavigationLink("See all") { HistoryView(records: shown.sessions).navigationTitle(selectedBucket == nil ? periodLabel : bucketLabel).background { AppBackground() } }
                         }.padding(.horizontal, 16).padding(.top, 16)
-                        ForEach(Array(records.sorted { $0.startedAt > $1.startedAt }.prefix(3))) { record in
+                        ForEach(Array(shown.sessions.sorted { $0.startedAt > $1.startedAt }.prefix(3))) { record in
                             NavigationLink { SessionDetail(record: record) } label: { HistoryRow(record: record) }.buttonStyle(.plain)
                         }
                     }.modifier(ContentSurface())
@@ -230,8 +226,8 @@ private struct StatisticsView: View {
     }
     private func duration(for preset: Preset) -> Double { shown.sessions.filter { $0.preset.kind == preset.kind }.reduce(0) { $0 + $1.duration(in: shownInterval) } }
     private func metric(_ title: String, value: String) -> some View {
-        VStack(alignment: .leading, spacing: 7) { Text(title).font(.subheadline).foregroundStyle(.secondary); Text(value).font(.title2.weight(.semibold)).monospacedDigit().fixedSize(horizontal: false, vertical: true) }
-            .frame(maxWidth: .infinity, alignment: .leading).activityCard().accessibilityElement(children: .combine)
+        VStack(alignment: .leading, spacing: 7) { Text(title).font(.subheadline).foregroundStyle(.secondary).lineLimit(1); Text(value).font(.title3.weight(.semibold)).monospacedDigit().lineLimit(1).minimumScaleFactor(0.8) }
+            .frame(maxWidth: .infinity, alignment: .leading).padding(14).modifier(ContentSurface()).accessibilityElement(children: .combine)
     }
     private func move(_ offset: Int) { anchor = calendar.date(byAdding: period.component, value: offset, to: anchor)!; selectedDate = nil }
     private var periodLabel: String {
