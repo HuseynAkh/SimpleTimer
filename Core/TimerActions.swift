@@ -24,4 +24,22 @@ extension TimerState {
         }
         return true
     }
+
+    /// A one-tap follow-up after a session completes; nothing starts until the user picks it.
+    /// Focus is followed by a short break, or a long break after every fourth focus that day.
+    /// A break is followed by the most recent focus session.
+    func suggestedNext(calendar: Calendar = .current) -> Preset? {
+        guard session.phase == .completed, let finished = history.last(where: { $0.id == session.id }) else { return nil }
+        let kind: SessionKind
+        if finished.isBreak {
+            kind = history.last { !$0.isBreak && presets.contains(kind: $0.preset.kind) }?.preset.kind ?? .work
+        } else {
+            let focus = history.filter { !$0.isBreak && $0.outcome == .completed && calendar.isDate($0.finishedAt, inSameDayAs: finished.finishedAt) }
+            kind = focus.count % 4 == 0 ? .longBreak : .shortBreak
+        }
+        return presets.first { $0.kind == kind }
+    }
+}
+private extension [Preset] {
+    func contains(kind: SessionKind) -> Bool { contains { $0.kind == kind } }
 }

@@ -3,6 +3,7 @@ import SwiftUI
 @main struct SimpleTimerApp: App {
     @StateObject private var store = TimerStore.shared
     @AppStorage("appearance") private var appearance: AppAppearance = .system
+    @AppStorage("keepScreenOn") private var keepScreenOn = false
     @Environment(\.scenePhase) private var scenePhase
     init() {
         // Start for background WatchConnectivity launches, before any view task.
@@ -18,6 +19,7 @@ import SwiftUI
                 .onOpenURL { _ in Task { await store.refresh() } }
                 .task { await store.refresh() }
                 .onChange(of: scenePhase) { _, phase in if phase == .active { Task { await store.refresh() } } }
+                .onChange(of: keepScreenOn && store.state.session.phase == .running, initial: true) { _, awake in UIApplication.shared.isIdleTimerDisabled = awake }
         }
     }
 }

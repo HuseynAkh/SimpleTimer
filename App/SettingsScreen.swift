@@ -3,6 +3,7 @@ import SwiftUI
 struct SettingsScreen: View {
     @EnvironmentObject private var store: TimerStore
     @AppStorage("appearance") private var appearance: AppAppearance = .system
+    @AppStorage("keepScreenOn") private var keepScreenOn = false
     @Environment(\.colorScheme) private var scheme
     @State private var adding = false
     @State private var restore = false
@@ -27,9 +28,10 @@ struct SettingsScreen: View {
                     }
                     Button { adding = true } label: { Label("New session", systemImage: "plus") }
                 }
-                Section("Feedback") {
+                Section("Timer") {
                     Toggle("Completion sound", isOn: Binding(get: { store.state.sound }, set: { store.state.sound = $0; store.save(); Task { await store.sync() } }))
                     Toggle("Haptics", isOn: Binding(get: { store.state.haptics }, set: { store.state.haptics = $0; store.save() }))
+                    Toggle("Keep screen on while running", isOn: $keepScreenOn)
                 }
                 Section {
                     NavigationLink { ExportScreen() } label: { Label("Export & backup", systemImage: "square.and.arrow.up") }
@@ -81,7 +83,7 @@ struct SessionEditor: View {
                         }
                     }
                 }
-            } header: { Text("Duration") } footer: { Text("1–240 minutes. Type a value or use a quick choice.") }
+            } header: { Text("Duration") } footer: { Text("1 to 240 minutes.") }
             Section("Colour") { ColorSwatches(selection: $color, label: name.isEmpty ? "Session" : name) }
             if preset?.kind.isCustom == true {
                 Section { Button("Delete session", role: .destructive) { deleting = true }

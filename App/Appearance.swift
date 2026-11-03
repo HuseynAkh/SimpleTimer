@@ -27,19 +27,13 @@ struct DashboardBackground: View {
 }
 struct PrimaryTimerButton: ViewModifier {
     var accent: Color
-    var prominent = true
     @Environment(\.accessibilityReduceTransparency) private var opaque
     @Environment(\.colorSchemeContrast) private var contrast
     @ViewBuilder func body(content: Content) -> some View {
         if #available(iOS 26.0, *), !opaque, contrast != .increased {
-            if prominent {
-                content.foregroundStyle(Color(UIColor.systemBackground)).buttonStyle(.glassProminent).tint(accent).buttonBorderShape(.roundedRectangle(radius: 20))
-            } else {
-                content.foregroundStyle(.primary).buttonStyle(.glass).buttonBorderShape(.roundedRectangle(radius: 20))
-            }
+            content.foregroundStyle(Color(UIColor.systemBackground)).buttonStyle(.glassProminent).tint(accent).buttonBorderShape(.capsule)
         } else {
-            content.buttonStyle(.plain).foregroundStyle(prominent ? Color(UIColor.systemBackground) : Color.primary)
-                .padding(.vertical, 8).background(prominent ? accent : Color(UIColor.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+            content.buttonStyle(.plain).foregroundStyle(Color(UIColor.systemBackground)).background(accent, in: Capsule())
         }
     }
 }

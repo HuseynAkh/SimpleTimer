@@ -151,6 +151,8 @@ public struct TimerState: Codable, Equatable, Sendable {
         return h > 0 ? String(format: "%d:%02d:%02d", h, m, s % 60) : String(format: "%02d:%02d", m, s % 60)
     }
 }
+/// Shared by iPhone and Watch so presets read the same on both.
+public func durationLabel(_ minutes: Int) -> String { minutes >= 60 ? "\(minutes / 60) hr" + (minutes % 60 > 0 ? " \(minutes % 60) min" : "") : "\(minutes) min" }
 public struct StateFile {
     public let url: URL
     public init(url: URL) { self.url = url }

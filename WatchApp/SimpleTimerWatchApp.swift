@@ -67,14 +67,18 @@ private struct WatchSessionsScreen: View {
     // Observe the store in the pushed screen itself; a captured navigation
     // destination can otherwise keep the selection from when it was opened.
     @EnvironmentObject private var store: WatchStore
+    @State private var switching: Preset?
 
     var body: some View {
         List(store.snapshot?.presets ?? [], id: \.kind) { preset in
             WatchSessionRow(preset: preset, selected: preset.kind == store.displayedSession?.preset.kind) {
-                store.perform("select", kind: preset.kind)
+                if store.displayedSession?.isActive == true { switching = preset } else { store.perform("select", kind: preset.kind) }
             }
         }
         .navigationTitle("Sessions")
+        .confirmationDialog("Switch to \(switching?.name ?? "")?", isPresented: Binding(get: { switching != nil }, set: { if !$0 { switching = nil } }), titleVisibility: .visible, presenting: switching) { preset in
+            Button("Switch") { store.perform("select", kind: preset.kind) }
+        } message: { _ in Text("Your current session is saved.") }
         .safeAreaInset(edge: .bottom) {
             if let message = store.message {
                 Text(message).font(.caption2).multilineTextAlignment(.center)
@@ -98,7 +102,7 @@ private struct WatchSessionRow: View {
             HStack(spacing: 8) {
                 VStack(alignment: .leading, spacing: 3) {
                     Text(preset.name).font(.body.weight(selected ? .semibold : .regular))
-                    Text("\(preset.minutes) min").font(.caption).foregroundStyle(.white.opacity(0.85))
+                    Text(durationLabel(preset.minutes)).font(.caption).foregroundStyle(.white.opacity(0.85))
                 }
                 Spacer(minLength: 0)
                 if selected {
@@ -120,7 +124,7 @@ private struct WatchSessionRow: View {
                         .strokeBorder(selected ? (contrast == .increased ? .white : Palette.color(preset.color)) : .clear, lineWidth: contrast == .increased ? 2 : 1.5)
                 }
         )
-        .accessibilityLabel("\(preset.name), \(preset.minutes) minutes")
+        .accessibilityLabel("\(preset.name), \(durationLabel(preset.minutes))")
         .accessibilityAddTraits(selected ? .isSelected : [])
     }
 }
