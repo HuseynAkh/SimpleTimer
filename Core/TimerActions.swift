@@ -3,6 +3,16 @@ import Foundation
 extension TimerState {
     /// One action path for iPhone, Watch and Live Activity controls.
     @discardableResult public mutating func perform(_ action: String, kind: SessionKind? = nil, title: String? = nil, at now: Date) -> Bool {
+        let before = session
+        guard apply(action, kind: kind, title: title, at: now) else { return false }
+        if session != before { changedAt = now }
+        // Only an attempt that was running or paused here counts as discarded; replacing a ready
+        // session must not hide a run the other device started meanwhile.
+        if session.id != before.id && before.isActive { replacedIDs = Array((replacedIDs + [before.id]).suffix(20)) }
+        return true
+    }
+
+    private mutating func apply(_ action: String, kind: SessionKind?, title: String?, at now: Date) -> Bool {
         switch action {
         case "timer", "stopwatch":
             return setMode(untimed: action == "stopwatch")

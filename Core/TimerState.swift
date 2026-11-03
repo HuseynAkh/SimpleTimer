@@ -57,7 +57,12 @@ public struct TimerState: Codable, Equatable, Sendable {
     public var sound = true
     public var haptics = true
     public var history: [SessionRecord] = []
-    private enum CodingKeys: String, CodingKey { case presets, selected, session, sound, haptics, history }
+    /// When this device last changed the current session; the newest change wins when devices sync.
+    public var changedAt: Date?
+    /// Recent running or paused sessions this device replaced on purpose (reset or a type change), so
+    /// the other device neither saves them as switched nor brings them back.
+    public var replacedIDs: [UUID] = []
+    private enum CodingKeys: String, CodingKey { case presets, selected, session, sound, haptics, history, changedAt, replacedIDs }
     public init(from decoder: Decoder) throws {
         let values = try decoder.container(keyedBy: CodingKeys.self)
         presets = try values.decode([Preset].self, forKey: .presets)
@@ -66,16 +71,18 @@ public struct TimerState: Codable, Equatable, Sendable {
         sound = try values.decode(Bool.self, forKey: .sound)
         haptics = try values.decode(Bool.self, forKey: .haptics)
         history = try values.decodeIfPresent([SessionRecord].self, forKey: .history) ?? []
+        changedAt = try values.decodeIfPresent(Date.self, forKey: .changedAt)
+        replacedIDs = try values.decodeIfPresent([UUID].self, forKey: .replacedIDs) ?? []
     }
     public init() {}
-    private mutating func closeSpan(at now: Date) {
+    mutating func closeSpan(at now: Date) {
         if let start = session.runningSince {
             let end = min(now, session.end ?? now)
             session.spans = (session.spans ?? []) + [RunSpan(start: start, end: end)]
             session.runningSince = nil
         }
     }
-    private mutating func archive(_ outcome: SessionOutcome, at now: Date) {
+    mutating func archive(_ outcome: SessionOutcome, at now: Date) {
         guard let record = record(outcome: outcome, at: now), !history.contains(where: { $0.id == record.id }) else { return }
         history.append(record)
     }
@@ -101,6 +108,8 @@ public struct TimerState: Codable, Equatable, Sendable {
             let outcome: SessionOutcome = session.isUntimed ? .ended : .completed
             closeSpan(at: finished); archive(outcome, at: finished)
             session.phase = session.isUntimed ? .ended : .completed; session.remaining = 0; session.end = nil
+            // Both devices reach the same deadline, so they agree on when this change happened.
+            changedAt = finished
         }
     }
     public mutating func start(at now: Date) {
@@ -159,9 +168,9 @@ public struct TimerState: Codable, Equatable, Sendable {
     public mutating func edit(_ preset: Preset) {
         guard (1...240).contains(preset.minutes), let index = presets.firstIndex(where: { $0.kind == preset.kind }) else { return }
         presets[index] = preset
-        if session.phase == .ready && selected == preset.kind { let title = carriedTitle; session = Session(preset: preset, untimed: session.isUntimed); session.title = title }
+        if session.phase == .ready && selected == preset.kind { let title = carriedTitle; session = Session(preset: preset, untimed: session.isUntimed); session.title = title; changedAt = Date() }
     }
-    public mutating func restoreDefaults() { presets = Preset.defaults + presets.filter { $0.kind.isCustom }; if session.phase == .ready { _ = reset() } }
+    public mutating func restoreDefaults() { presets = Preset.defaults + presets.filter { $0.kind.isCustom }; if session.phase == .ready { _ = reset(); changedAt = Date() } }
     @discardableResult public mutating func addPreset(name: String, minutes: Int, color: String) -> SessionKind? {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty, trimmed.count <= 40, (1...240).contains(minutes) else { return nil }
@@ -172,7 +181,7 @@ public struct TimerState: Codable, Equatable, Sendable {
     @discardableResult public mutating func removePreset(_ kind: SessionKind) -> Bool {
         guard kind.isCustom, !(selected == kind && session.isActive) else { return false }
         presets.removeAll { $0.kind == kind }
-        if selected == kind { _ = select(.work) }
+        if selected == kind { _ = select(.work); changedAt = Date() }
         return true
     }
     /// Countdowns round up so 00:00 means done; a stopwatch rounds down so it starts at 00:00.

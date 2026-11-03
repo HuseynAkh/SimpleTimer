@@ -54,7 +54,7 @@ Use **Save history backup** for a complete JSON copy of finished sessions. Impor
 
 ## Apple Watch
 
-The companion is a remote, not a second timer. It shows the latest iPhone session and lets you start, pause, resume, end, reset or choose a session. The phone owns the saved history. Changes require a reachable paired iPhone. Session selection responds immediately on the Watch while the phone confirms it, and updates sync in the background. Disconnected timer commands are never queued to run later. Open the iPhone app if the Watch asks you to reconnect.
+The Watch runs the timer itself and syncs with your iPhone. Start, pause, resume, end, reset, switch modes or choose a session, and the change shows at once, even when the iPhone is out of reach. The two devices catch up whenever they can talk: the newest change wins, sessions saved on either device end up in one history, and a session already ended on one device never starts again on the other. "Syncs with iPhone later" appears only while the Watch has changes the phone has not received.
 
 Sessions use the same colours as iPhone. A checkmark marks your current choice without dimming its name or duration.
 

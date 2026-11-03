@@ -1,6 +1,9 @@
 import Foundation
 import WatchConnectivity
 
+/// Both devices keep a full copy of the current session and change it at once. The phone merges what
+/// the Watch sends and replies with its merged copy; application context carries the latest state
+/// across disconnections in both directions.
 @MainActor final class PhoneConnection: NSObject, WCSessionDelegate {
     static let shared = PhoneConnection()
     private var lastAcknowledgedCommand: UUID?
@@ -12,22 +15,29 @@ import WatchConnectivity
         WCSession.default.activate()
     }
 
-    @discardableResult func publish(_ state: TimerState) -> Data? {
+    @discardableResult func publish(_ state: TimerState, push: Bool = true) -> [String: Any] {
         let revision = preferences.integer(forKey: "watchSnapshotRevision") + 1
         preferences.set(revision, forKey: "watchSnapshotRevision")
-        let snapshot = WatchSnapshot(state: state, revision: Int64(revision), acknowledgedCommandID: lastAcknowledgedCommand)
-        guard let data = try? JSONEncoder().encode(snapshot) else { return nil }
+        var payload: [String: Any] = [:]
+        // Older Watch builds read "snapshot" while both apps update; current builds read "sync".
+        if let data = try? JSONEncoder().encode(WatchSnapshot(state: state, revision: Int64(revision), acknowledgedCommandID: lastAcknowledgedCommand)) { payload["snapshot"] = data }
+        if let data = try? JSONEncoder().encode(state.envelope(from: .phone)) { payload["sync"] = data }
         let session = WCSession.default
-        guard session.activationState == .activated, session.isPaired, session.isWatchAppInstalled else { return data }
-        // Latest-state delivery survives disconnection. A foreground push avoids
-        // waiting for the system's background application-context delivery budget.
-        try? session.updateApplicationContext(["snapshot": data])
-        if session.isReachable { session.sendMessage(["snapshot": data], replyHandler: nil, errorHandler: { _ in }) }
-        return data
+        guard session.activationState == .activated, session.isPaired, session.isWatchAppInstalled else { return payload }
+        try? session.updateApplicationContext(payload)
+        if push && session.isReachable { session.sendMessage(payload, replyHandler: nil, errorHandler: { _ in }) }
+        return payload
+    }
+
+    @discardableResult private func merge(_ data: Data?) -> Bool {
+        guard let data, let remote = try? JSONDecoder().decode(SyncEnvelope.self, from: data), remote.origin == .watch else { return false }
+        return TimerStore.shared.merge(remote)
     }
 
     nonisolated func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {
-        Task { @MainActor in self.publish(TimerStore.shared.state) }
+        // Pick up anything the Watch changed while this app was not running.
+        let pending = session.receivedApplicationContext["sync"] as? Data
+        Task { @MainActor in self.merge(pending); self.publish(TimerStore.shared.state) }
     }
     nonisolated func sessionDidBecomeInactive(_ session: WCSession) {}
     nonisolated func sessionDidDeactivate(_ session: WCSession) { session.activate() }
@@ -38,15 +48,26 @@ import WatchConnectivity
         guard session.isReachable else { return }
         Task { @MainActor in self.publish(TimerStore.shared.state) }
     }
+    nonisolated func session(_ session: WCSession, didReceiveApplicationContext applicationContext: [String: Any]) {
+        let data = applicationContext["sync"] as? Data
+        Task { @MainActor in if self.merge(data) { self.publish(TimerStore.shared.state) } }
+    }
+    nonisolated func session(_ session: WCSession, didReceiveMessage message: [String: Any]) {
+        let data = message["sync"] as? Data
+        Task { @MainActor in if self.merge(data) { self.publish(TimerStore.shared.state) } }
+    }
 
     nonisolated func session(_ session: WCSession, didReceiveMessage message: [String: Any], replyHandler: @escaping ([String: Any]) -> Void) {
-        let commandData = message["command"] as? Data
+        let sync = message["sync"] as? Data, commandData = message["command"] as? Data
         Task { @MainActor in
             let store = TimerStore.shared
             var error: String?
             if !store.storageAvailable {
                 error = "Open SimpleTimer on iPhone to recover its saved data."
+            } else if sync != nil {
+                self.merge(sync)
             } else if let commandData {
+                // Commands come only from older Watch builds during an update.
                 if let command = try? JSONDecoder().decode(WatchCommand.self, from: commandData) {
                     if let id = command.id, id == self.lastAcknowledgedCommand {
                         // Repeated delivery acknowledges the original command, never applies it twice.
@@ -57,8 +78,7 @@ import WatchConnectivity
                     } else { error = "The timer could not be saved on iPhone." }
                 } else { error = "Update SimpleTimer on both devices to reconnect." }
             } else { store.refreshImmediately(publish: false) }
-            var reply: [String: Any] = [:]
-            if let data = self.publish(store.state) { reply["snapshot"] = data }
+            var reply = self.publish(store.state, push: false)
             if let error { reply["error"] = error }
             // Nothing in this path awaits ActivityKit, notification permissions or alerts.
             replyHandler(reply)

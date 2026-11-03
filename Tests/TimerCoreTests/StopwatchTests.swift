@@ -125,15 +125,16 @@ final class StopwatchTests: XCTestCase {
         XCTAssertNil(decoded.session.title)
     }
 
-    func testWatchSelectionPreviewKeepsStopwatchMode() {
+    func testWatchStartsANamedStopwatchThatThePhoneAdopts() {
         var phone = stopwatch()
-        var watch = WatchSyncState(snapshot: WatchSnapshot(state: phone, revision: 1))
-        _ = watch.select(.deepWork, at: now)
-        XCTAssertEqual(watch.displayedSession?.isUntimed, true)
-        let start = WatchCommand(action: "start", sessionID: phone.session.id, title: "From wrist")
-        XCTAssertTrue(start.isValid(for: phone, at: now))
-        phone.perform(start.action, title: start.title, at: now)
+        var watch = TimerState(); watch.merge(phone.envelope(from: .phone), at: now)
+        XCTAssertTrue(watch.session.isUntimed)
+        watch.perform("select", kind: .deepWork, at: now.addingTimeInterval(1))
+        XCTAssertTrue(watch.session.isUntimed)
+        watch.perform("start", title: "From wrist", at: now.addingTimeInterval(2))
+        XCTAssertTrue(phone.merge(watch.envelope(from: .watch), at: now.addingTimeInterval(3)))
         XCTAssertEqual(phone.session.title, "From wrist")
-        XCTAssertTrue(WatchCommand(action: "title", sessionID: phone.session.id, title: "Renamed").isValid(for: phone, at: now))
+        XCTAssertEqual(phone.session.phase, .running)
+        XCTAssertEqual(phone.selected, .deepWork)
     }
 }

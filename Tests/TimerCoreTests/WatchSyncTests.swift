@@ -5,95 +5,21 @@ import XCTest
 final class WatchSyncTests: XCTestCase {
     let now = Date(timeIntervalSince1970: 1_700_000_000)
 
-    func testPushReceiptCompletesSelectionWhenDirectReplyIsLost() throws {
-        var phone = TimerState()
-        var watch = WatchSyncState(snapshot: WatchSnapshot(state: phone, at: now, revision: 1))
-        let command = try XCTUnwrap(watch.select(.deepWork, at: now))
-        XCTAssertEqual(watch.displayedSession?.preset.kind, .deepWork)
-        XCTAssertEqual(watch.snapshot?.session.preset.kind, .work) // Preview is not persisted state.
-        phone.select(.deepWork, at: now)
-        watch.receive(WatchSnapshot(state: phone, at: now, revision: 2, acknowledgedCommandID: command.id))
-        XCTAssertNil(watch.pending)
-        XCTAssertNil(watch.desiredSelection)
-        XCTAssertFalse(watch.fail(try XCTUnwrap(command.id))) // A late transport error cannot undo success.
-        XCTAssertEqual(watch.displayedSession?.id, phone.session.id)
-    }
-
-    func testRapidSelectionsCoalesceAndUseTheConfirmedSessionID() throws {
-        var phone = TimerState()
-        var watch = WatchSyncState(snapshot: WatchSnapshot(state: phone, at: now, revision: 1))
-        let first = try XCTUnwrap(watch.select(.deepWork, at: now))
-        XCTAssertNil(watch.select(.shortBreak, at: now))
-        XCTAssertNil(watch.select(.longBreak, at: now))
-        XCTAssertEqual(watch.displayedSession?.preset.kind, .longBreak)
-        phone.select(.deepWork, at: now)
-        watch.receive(WatchSnapshot(state: phone, at: now, revision: 2, acknowledgedCommandID: first.id))
-        let last = try XCTUnwrap(watch.nextSelection(at: now))
-        XCTAssertEqual(last.kind, .longBreak)
-        XCTAssertEqual(last.sessionID, phone.session.id)
-        XCTAssertTrue(last.isValid(for: phone, at: now))
-        XCTAssertNil(watch.nextSelection(at: now))
-    }
-
-    func testLateReplyCannotRevertNewerStateOrFinishAnotherCommand() throws {
-        var phone = TimerState()
-        var watch = WatchSyncState(snapshot: WatchSnapshot(state: phone, at: now, revision: 1))
-        let first = try XCTUnwrap(watch.select(.deepWork, at: now))
-        phone.select(.deepWork, at: now)
-        let firstReply = WatchSnapshot(state: phone, at: now, revision: 2, acknowledgedCommandID: first.id)
-        watch.receive(firstReply)
-        let second = try XCTUnwrap(watch.begin("start", at: now))
-        phone.start(at: now)
-        watch.receive(WatchSnapshot(state: phone, at: now, revision: 3))
-        watch.reply(to: try XCTUnwrap(first.id), snapshot: firstReply)
-        XCTAssertEqual(watch.snapshot?.session.phase, .running)
-        XCTAssertEqual(watch.pending?.id, second.id)
-    }
-
-    func testTimeoutDropsQueuedSelectionAndNeverReplaysTimerActions() throws {
-        let phone = TimerState()
-        var watch = WatchSyncState(snapshot: WatchSnapshot(state: phone, at: now, revision: 1))
-        let command = try XCTUnwrap(watch.select(.deepWork, at: now))
-        _ = watch.select(.shortBreak, at: now)
-        XCTAssertTrue(watch.fail(try XCTUnwrap(command.id)))
-        XCTAssertEqual(watch.displayedSession?.preset.kind, .work)
-        XCTAssertNil(watch.nextSelection(at: now))
-        watch.receive(WatchSnapshot(state: phone, at: now, revision: 2))
-        XCTAssertNil(watch.pending)
-        XCTAssertNil(watch.nextSelection(at: now))
-    }
-
-    func testLateConfirmationAfterTimeoutShowsWhatActuallyHappened() throws {
-        var phone = TimerState()
-        var watch = WatchSyncState(snapshot: WatchSnapshot(state: phone, at: now, revision: 1))
-        let command = try XCTUnwrap(watch.begin("start", at: now))
-        watch.fail(try XCTUnwrap(command.id))
-        phone.start(at: now)
-        watch.receive(WatchSnapshot(state: phone, at: now, revision: 2, acknowledgedCommandID: command.id))
-        XCTAssertEqual(watch.displayedSession?.phase, .running)
-        XCTAssertNil(watch.pending)
-    }
-
+    // Older Watch builds still read revision-ordered snapshots while both apps update.
     func testRevisionOrderingSurvivesClockChangesAndIgnoresOldContext() {
         var phone = TimerState()
-        var watch = WatchSyncState(snapshot: WatchSnapshot(state: phone, at: now, revision: 5))
+        let first = WatchSnapshot(state: phone, at: now, revision: 5)
         phone.select(.deepWork, at: now)
-        XCTAssertTrue(watch.receive(WatchSnapshot(state: phone, at: now.addingTimeInterval(-60), revision: 6)))
-        XCTAssertFalse(watch.receive(WatchSnapshot(state: TimerState(), at: now.addingTimeInterval(60), revision: 4)))
-        XCTAssertFalse(watch.receive(WatchSnapshot(state: TimerState(), at: now.addingTimeInterval(120))))
-        XCTAssertEqual(watch.snapshot?.session.preset.kind, .deepWork)
+        let newer = WatchSnapshot(state: phone, at: now.addingTimeInterval(-60), revision: 6)
+        XCTAssertTrue(newer.isNewer(than: first))
+        XCTAssertFalse(WatchSnapshot(state: TimerState(), at: now.addingTimeInterval(60), revision: 4).isNewer(than: newer))
+        XCTAssertFalse(WatchSnapshot(state: TimerState(), at: now.addingTimeInterval(120)).isNewer(than: newer))
     }
 
-    func testOldCompanionPayloadsStillDecodeAndReply() throws {
+    func testOldCompanionPayloadsStillDecode() throws {
         let state = TimerState()
         let data = try JSONEncoder().encode(WatchSnapshot(state: state, at: now))
-        let old = try JSONDecoder().decode(WatchSnapshot.self, from: data)
-        XCTAssertNil(old.revision)
-        var watch = WatchSyncState(snapshot: old)
-        let command = try XCTUnwrap(watch.begin("start", at: now))
-        var running = state; running.start(at: now)
-        watch.reply(to: try XCTUnwrap(command.id), snapshot: WatchSnapshot(state: running, at: now))
-        XCTAssertNil(watch.pending)
+        XCTAssertNil(try JSONDecoder().decode(WatchSnapshot.self, from: data).revision)
         let legacyData = Data("{\"action\":\"start\",\"sessionID\":\"\(state.session.id)\"}".utf8)
         let legacy = try JSONDecoder().decode(WatchCommand.self, from: legacyData)
         XCTAssertNil(legacy.id)

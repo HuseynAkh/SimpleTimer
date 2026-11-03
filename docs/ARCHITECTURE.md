@@ -1,6 +1,6 @@
 # Architecture
 
-The iPhone is the single writer for timer state. `TimerStore` validates, changes and atomically saves a timer action in one main-actor turn. It then schedules notifications and Live Activities through a serial, coalescing effects queue. Watch acknowledgements and UI interaction never wait for those system effects or notification permission dialogs. Core types depend only on Foundation. There is no backend or third-party runtime SDK.
+Each device saves timer changes locally and the two converge by sync (see Watch). `TimerStore` validates, changes and atomically saves a timer action in one main-actor turn. It then schedules notifications and Live Activities through a serial, coalescing effects queue. Watch acknowledgements and UI interaction never wait for those system effects or notification permission dialogs. Core types depend only on Foundation. There is no backend or third-party runtime SDK.
 
 ## Timing and history
 
@@ -22,15 +22,13 @@ A share sheet is the only AI integration. The user picks the destination. This a
 
 ## Watch
 
-The Watch caches only confirmed phone state: the current session, presets, snapshot time, a persisted phone revision and the most recent command receipt. The iPhone activates WatchConnectivity at app startup, including background launches. A reachable Watch gets immediate state messages; `updateApplicationContext` also carries the latest state for background delivery. Both companions refresh when reachability returns.
+The Watch keeps its own `TimerState` and runs every action through the same `perform` path as the iPhone, so taps apply and save at once with no waiting, spinner or confirmation round trip. Each device stamps the current session with `changedAt` when it changes it; both reach the same value when a timer completes because the deadline is shared.
 
-Timer commands use `sendMessage` with an expected session UUID, unique command ID and eight-second expiry. The phone validates the command and saves the timer before acknowledging it. The acknowledgement travels in both the direct reply and state broadcasts, so a lost reply does not leave the Watch waiting after a successful change. Duplicate delivery of the most recently acknowledged command is harmless; older commands cannot affect a replacement session. Every rejection includes the latest state.
+Sync uses one message type, `SyncEnvelope`, in both directions. The Watch sends its copy with `sendMessage` when the phone is reachable (the phone merges it and replies with its merged copy) and always also writes it to the application context, which the system delivers after a disconnection. The phone publishes the same way after every save and picks up the Watch's context when it launches. A send counts as delivered only after a reply, so a change made offline is sent again when the devices reconnect; a five-second silence or a send error marks the phone as away, which is the only time the Watch shows "Syncs with iPhone later".
 
-The Watch orders snapshots by phone revision, accepts command receipts independently of delivery order, and ignores late errors for already-confirmed commands. Background refreshes do not lock controls. Selection is previewed locally; rapid taps keep only the latest unsent selection, sent against the confirmed session after the previous selection completes. A timeout drops that unsent selection and triggers a read-only refresh. Timer commands are never automatically retried or stored for disconnected delivery. Only confirmed snapshots are persisted, and the Sessions screen observes them directly.
+`TimerState.merge` converges the two copies. History is a union by session ID, so a session completed or ended on both devices is saved once. The phone owns the presets. The newest change to the current session wins, with ties going to the phone. A session that either device has saved, or that the other deliberately discarded with Reset or a type change (`replacedIDs`), never becomes active again. If the other device's newer session wins while this device was still running a different one, that run is saved as switched instead of being lost. The Watch keeps finished sessions in a small outbox until the phone lists them in `finishedIDs`. The phone still runs notifications and Live Activities whenever it receives a change; older Watch builds keep working through the previous `WatchSnapshot`/`WatchCommand` messages while both apps update.
 
-No history is duplicated on the Watch. A disconnected Watch can show a cached countdown, but needs the phone for changes. This keeps one timer and one history without competing offline writers. System reachability and background execution still depend on watchOS/iOS. Simulator tests do not establish a latency guarantee for physical Bluetooth or Wi-Fi.
-
-Apple references: [interactive messages](https://developer.apple.com/documentation/watchconnectivity/wcsession/sendmessage(_:replyhandler:errorhandler:)), [application context](https://developer.apple.com/documentation/watchconnectivity/wcsession/updateapplicationcontext(_:)), [reachability changes](https://developer.apple.com/documentation/watchconnectivity/wcsessiondelegate/sessionreachabilitydidchange(_:)).
+System delivery timing still depends on watchOS and iOS, and simulators do not establish physical Bluetooth or Wi-Fi latency.
 
 ## Signing and publishing
 

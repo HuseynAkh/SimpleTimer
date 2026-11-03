@@ -76,6 +76,17 @@ import UserNotifications
             }
         }
     }
+    /// Applies the Watch's copy. The Watch already showed and saved the change, so this never waits
+    /// for permission prompts or system effects either.
+    @discardableResult func merge(_ remote: SyncEnvelope) -> Bool {
+        guard storageAvailable else { return false }
+        let previous = state
+        guard state.merge(remote, at: Date()) else { return false }
+        guard save(publish: false) else { state = previous; return false }
+        if state.session.phase == .running && (previous.session.id != state.session.id || previous.session.phase == .ready) { activityToCreate = state.session.id }
+        effects.submit(state)
+        return true
+    }
     func edit(_ preset: Preset) { state.edit(preset); save() }
     func restore() { state.restoreDefaults(); save() }
     func sync() async { effects.submit(state) }

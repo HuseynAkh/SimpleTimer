@@ -73,16 +73,16 @@ final class ResetTests: XCTestCase {
         }
     }
 
-    func testWatchResetReceiptClearsPendingStateAndRejectsOldControls() throws {
+    func testWatchResetSyncsWithoutSavingAndRejectsOldCommands() {
         var phone = TimerState(); phone.perform("start", at: now)
-        var watch = WatchSyncState(snapshot: WatchSnapshot(state: phone, at: now, revision: 1))
-        let command = try XCTUnwrap(watch.begin("reset", at: now.addingTimeInterval(30)))
-        XCTAssertTrue(command.isValid(for: phone, at: now.addingTimeInterval(30)))
-        phone.perform(command.action, at: now.addingTimeInterval(30))
-        watch.receive(WatchSnapshot(state: phone, at: now.addingTimeInterval(30), revision: 2, acknowledgedCommandID: command.id))
-        XCTAssertNil(watch.pending)
-        XCTAssertEqual(watch.displayedSession?.phase, .ready)
+        var watch = TimerState(); watch.merge(phone.envelope(from: .phone), at: now)
+        let oldCommand = WatchCommand(action: "pause", sessionID: phone.session.id)
+        watch.perform("reset", at: now.addingTimeInterval(30))
+        XCTAssertEqual(watch.session.phase, .ready)
+        phone.merge(watch.envelope(from: .watch), at: now.addingTimeInterval(31))
+        XCTAssertEqual(phone.session.phase, .ready)
+        XCTAssertEqual(phone.session.id, watch.session.id)
         XCTAssertTrue(phone.history.isEmpty)
-        XCTAssertFalse(command.isValid(for: phone, at: now.addingTimeInterval(31)))
+        XCTAssertFalse(oldCommand.isValid(for: phone, at: now.addingTimeInterval(31)))
     }
 }

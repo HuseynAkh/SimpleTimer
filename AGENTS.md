@@ -34,9 +34,9 @@ After editing `project.yml`, run `xcodegen generate` with `Config/Local.xcconfig
 
 ## Invariants
 
-- The iPhone is the single writer. All surfaces (app, Live Activity, Watch) go through `TimerState.perform`. Keep `restart` as a reset-only alias for older clients.
+- All surfaces (app, Live Activity, Watch) go through `TimerState.perform`. Keep `restart` as a reset-only alias for older clients.
 - `TimerStore.apply` validates, mutates and saves in one main-actor turn with no suspension. Notifications and ActivityKit run afterwards through `LatestEffectsQueue`. Acknowledgements never wait for them.
-- Watch commands carry an expected session UUID, a command ID and an expiry. Never queue, replay or auto-retry a timer command. The Watch persists only confirmed phone state and keeps no history.
+- The Watch keeps its own copy and never waits on the phone. Devices exchange `SyncEnvelope`s and converge with `TimerState.merge`: newest `changedAt` wins, history is a union by ID, saved or deliberately replaced sessions never run again, and a losing run is saved as switched. The phone owns presets, notifications and Live Activities. Keep `WatchSnapshot`/`WatchCommand` handling for older Watch builds.
 - Reset discards the current attempt without archiving it. End saves elapsed time. Only an explicit Start begins an attempt.
 - A stopwatch is an untimed `Session` with a 12-hour limit that reuses every timer action. Mode switches only between sessions. New fields stay optional so older saves, backups and companions still decode.
 - Saved state and backup JSON must stay readable by older and newer builds. Import is additive and never touches preferences or the active timer.

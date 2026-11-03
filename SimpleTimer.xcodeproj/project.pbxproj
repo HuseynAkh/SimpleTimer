@@ -18,7 +18,6 @@
 		566642DA31414F7DD3418744 /* SimpleTimerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4258E28EB8B5B58964EB80B6 /* SimpleTimerApp.swift */; };
 		59561D1B34445871242D8B20 /* SessionHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 672737E98CD639063BAE8F8D /* SessionHistory.swift */; };
 		66DFCB592EF9166ABD740D81 /* Palette.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29B418097650D598C526AE34 /* Palette.swift */; };
-		68E5326AEA1AB554C6F64475 /* WatchSyncState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CB2CC5650063F3B6B436FA0 /* WatchSyncState.swift */; };
 		6951E8D62F77B8C61CA58875 /* TimerStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2D439008821B36CC51209C6 /* TimerStore.swift */; };
 		74889798897026F5A60FD476 /* TimerState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85B0204E3A1ACF5B4C03D7C4 /* TimerState.swift */; };
 		7A9E80209EC46F5A2D2853C3 /* SettingsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87E9510293C2EEF06CD20789 /* SettingsScreen.swift */; };
@@ -34,10 +33,12 @@
 		A57E948E1B4809066A15950F /* Appearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8235D2C249FEB7F410F13FC9 /* Appearance.swift */; };
 		A59DC7C56ECF2FFF82100D2A /* SessionHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 672737E98CD639063BAE8F8D /* SessionHistory.swift */; };
 		AAB33B10CFFD60DB4F66138D /* TimerIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 338E13EC0B1BD46611F5C97C /* TimerIntent.swift */; };
-		B186F59DBC73C64BF623B504 /* WatchSyncState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CB2CC5650063F3B6B436FA0 /* WatchSyncState.swift */; };
+		AEB8535CC21EFCEB2FA3FB1D /* TimerSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = 595E0F9F5C6F23D4D0AF892E /* TimerSync.swift */; };
 		B4C6249F22549EC7D030654D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D60EE1B39674E4821994AB87 /* Assets.xcassets */; };
 		B8D3545B1B12F0FA0287564F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BC88056C6AF59F2E5B5847C6 /* Assets.xcassets */; };
 		C2F2F279A36F0321D6008512 /* TimerActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CD1450BBB97C7F08BFBE2BC /* TimerActions.swift */; };
+		CFB3D2806BAA6FC1506B7E4C /* TimerSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = 595E0F9F5C6F23D4D0AF892E /* TimerSync.swift */; };
+		D12F2F3069659FE3199160CB /* TimerSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = 595E0F9F5C6F23D4D0AF892E /* TimerSync.swift */; };
 		D315ECCE0002BE35A5ABAAD0 /* WatchSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E86FB43E5918BB29E489CEB /* WatchSnapshot.swift */; };
 		D68AA03BEA8FCAEBE273D669 /* LatestEffectsQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FB3B7E8D4813B134E83F654 /* LatestEffectsQueue.swift */; };
 		D9642761DD0D90E4F5AF8A1E /* HistoryExport.swift in Sources */ = {isa = PBXBuildFile; fileRef = C90877B3B17F6B8CB6964BD7 /* HistoryExport.swift */; };
@@ -49,7 +50,6 @@
 		E5506B3406FD10E06F2227A3 /* Palette.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29B418097650D598C526AE34 /* Palette.swift */; };
 		E6A56C51072D93019D9F21A3 /* ExportScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8AB56127566C743EC6C2AD3 /* ExportScreen.swift */; };
 		EB8E7A80001F8AB7130989E5 /* SimpleTimerActivity.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = A7B0AD5DDFDBE657297A5383 /* SimpleTimerActivity.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		EE891A8931C9EAE4A8491530 /* WatchSyncState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CB2CC5650063F3B6B436FA0 /* WatchSyncState.swift */; };
 		F68104C3038D68DD289A81FA /* HistoryExport.swift in Sources */ = {isa = PBXBuildFile; fileRef = C90877B3B17F6B8CB6964BD7 /* HistoryExport.swift */; };
 /* End PBXBuildFile section */
 
@@ -104,10 +104,10 @@
 		338E13EC0B1BD46611F5C97C /* TimerIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerIntent.swift; sourceTree = "<group>"; };
 		4258E28EB8B5B58964EB80B6 /* SimpleTimerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleTimerApp.swift; sourceTree = "<group>"; };
 		454BCFA9A82970E23D3BAAB4 /* WatchStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchStore.swift; sourceTree = "<group>"; };
+		595E0F9F5C6F23D4D0AF892E /* TimerSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerSync.swift; sourceTree = "<group>"; };
 		5B551A26BA9535D4BFE02AC0 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		5CB67F64239552C8D146256F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		672737E98CD639063BAE8F8D /* SessionHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionHistory.swift; sourceTree = "<group>"; };
-		7CB2CC5650063F3B6B436FA0 /* WatchSyncState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchSyncState.swift; sourceTree = "<group>"; };
 		7E86FB43E5918BB29E489CEB /* WatchSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchSnapshot.swift; sourceTree = "<group>"; };
 		7FB3B7E8D4813B134E83F654 /* LatestEffectsQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LatestEffectsQueue.swift; sourceTree = "<group>"; };
 		8235D2C249FEB7F410F13FC9 /* Appearance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Appearance.swift; sourceTree = "<group>"; };
@@ -223,8 +223,8 @@
 				672737E98CD639063BAE8F8D /* SessionHistory.swift */,
 				1CD1450BBB97C7F08BFBE2BC /* TimerActions.swift */,
 				85B0204E3A1ACF5B4C03D7C4 /* TimerState.swift */,
+				595E0F9F5C6F23D4D0AF892E /* TimerSync.swift */,
 				7E86FB43E5918BB29E489CEB /* WatchSnapshot.swift */,
-				7CB2CC5650063F3B6B436FA0 /* WatchSyncState.swift */,
 			);
 			path = Core;
 			sourceTree = "<group>";
@@ -374,8 +374,8 @@
 				1EFA5882D1C345C39AB2DD22 /* TimerScreen.swift in Sources */,
 				00E759EC55EA63C133AE422C /* TimerState.swift in Sources */,
 				6951E8D62F77B8C61CA58875 /* TimerStore.swift in Sources */,
+				CFB3D2806BAA6FC1506B7E4C /* TimerSync.swift in Sources */,
 				A1E825AD36DAD7A1DBE6A01B /* WatchSnapshot.swift in Sources */,
-				68E5326AEA1AB554C6F64475 /* WatchSyncState.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -392,8 +392,8 @@
 				1F9F514911C4055EEE5272BE /* TimerAttributes.swift in Sources */,
 				AAB33B10CFFD60DB4F66138D /* TimerIntent.swift in Sources */,
 				DD59FFC50D388F0EC6371B20 /* TimerState.swift in Sources */,
+				AEB8535CC21EFCEB2FA3FB1D /* TimerSync.swift in Sources */,
 				7EBCF005D36676A9384E8EF8 /* WatchSnapshot.swift in Sources */,
-				B186F59DBC73C64BF623B504 /* WatchSyncState.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -408,9 +408,9 @@
 				D9BF4D05EA2F5FE873E6FE29 /* SimpleTimerWatchApp.swift in Sources */,
 				83ABA057DD843A1B41A4900F /* TimerActions.swift in Sources */,
 				74889798897026F5A60FD476 /* TimerState.swift in Sources */,
+				D12F2F3069659FE3199160CB /* TimerSync.swift in Sources */,
 				D315ECCE0002BE35A5ABAAD0 /* WatchSnapshot.swift in Sources */,
 				2873C454AFD4199B730758CD /* WatchStore.swift in Sources */,
-				EE891A8931C9EAE4A8491530 /* WatchSyncState.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
