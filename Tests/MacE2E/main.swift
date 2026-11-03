@@ -161,7 +161,10 @@ import UserNotifications
     func quiet() async {
         let store = app.store, front = NSWorkspace.shared.frontmostApplication?.processIdentifier
         let idle = button.image?.size ?? .zero
+        // A symbol's alignment rect is a thin band, and the menu bar clips the item to it.
+        func whole(_ image: NSImage?) -> Bool { image.map { $0.alignmentRect == NSRect(origin: .zero, size: $0.size) } ?? false }
         check("Q01 icon: 15 pt semibold timer template at 19 pt", button.image?.isTemplate == true && idle == NSSize(width: 19, height: 19) && button.accessibilityValue() == nil, "\(idle)")
+        check("Q12 icon: nothing is clipped, because the alignment rect is the whole timer image", whole(button.image), "\(String(describing: button.image?.alignmentRect))")
         store.act("start"); await wait(0.3)
         let value = button.accessibilityValue() as? String
         check("Q02 running: time beside the icon, with a ticker", value?.contains(":") == true && (button.image?.size.width ?? 0) > idle.width && app.ticker != nil, "\(String(describing: value))")
@@ -178,6 +181,7 @@ import UserNotifications
         store.act("stopwatch"); await wait(0.2)
         let stopwatch = button.image?.size ?? .zero
         check("Q08 stopwatch: its icon is the same weight, within 2 pt in size", abs(stopwatch.height - idle.height) <= 2 && button.image?.isTemplate == true, "\(stopwatch)")
+        check("Q13 icon: nothing is clipped, because the alignment rect is the whole stopwatch image", whole(button.image), "\(String(describing: button.image?.alignmentRect))")
         store.act("start"); await wait(1.2)
         check("Q09 stopwatch: counts up", (button.accessibilityValue() as? String).map { $0 != "0:00" } == true, "\(String(describing: button.accessibilityValue()))")
         store.act("reset"); await wait(0.2)

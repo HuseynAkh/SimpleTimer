@@ -125,10 +125,11 @@ import UserNotifications
         }
     }
     private func symbol(_ name: String) -> NSImage {
-        let image = NSImage(systemSymbolName: name, accessibilityDescription: "SimpleTimer")!
-            // Larger and heavier than the 13 pt menu bar text, to sit level with system and third-party icons.
-            .withSymbolConfiguration(.init(pointSize: 15, weight: .semibold))!
-        image.isTemplate = true
+        // Larger and heavier than the 13 pt menu bar text, to sit level with system and third-party icons.
+        let glyph = NSImage(systemSymbolName: name, accessibilityDescription: "SimpleTimer")!.withSymbolConfiguration(.init(pointSize: 15, weight: .semibold))!
+        // A symbol's alignment rect is only about text height, and the menu bar clips the item to it. Redrawn, the whole image counts.
+        let image = NSImage(size: glyph.size, flipped: false) { rect in glyph.draw(in: rect); return true }
+        image.isTemplate = true; image.accessibilityDescription = "SimpleTimer"
         return image
     }
     /// Monospaced digits keep the item the same width from second to second.
