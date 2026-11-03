@@ -149,19 +149,26 @@ private struct Press: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View { configuration.label.opacity(configuration.isPressed ? 0.6 : 1) }
 }
 
-/// The system popover material, so the drop-down follows Light and Dark Mode and Reduce Transparency,
-/// with the iPhone dashboard's faint accent glow.
+/// Dark Mode uses a deep, nearly opaque graphite so the wallpaper and the session colour never tint the
+/// drop-down; the accent stays on the controls. Light Mode keeps the system popover material.
 private struct PanelBackground: View {
     var accent: Color
     var material: Bool
     @Environment(\.colorScheme) private var scheme
+    @Environment(\.accessibilityReduceTransparency) private var opaque
     var body: some View {
         let shape = RoundedRectangle(cornerRadius: 16, style: .continuous)
         ZStack {
-            if material { Material() } else { Color(red: 0.11, green: 0.115, blue: 0.13) }
-            RadialGradient(colors: [accent.opacity(scheme == .dark ? 0.2 : 0.1), .clear], center: UnitPoint(x: 0.85, y: 0.1), startRadius: 0, endRadius: 260)
+            if material && !opaque { Material() }
+            if scheme == .dark {
+                Color(red: 0.07, green: 0.072, blue: 0.08).opacity(material && !opaque ? 0.92 : 1)
+                // A faint top light gives the surface depth without colour.
+                LinearGradient(colors: [.white.opacity(0.05), .clear], startPoint: .top, endPoint: .center)
+            } else if !material || opaque {
+                Color(nsColor: .windowBackgroundColor)
+            }
         }
-        .clipShape(shape).overlay(shape.strokeBorder(Color.primary.opacity(0.12)))
+        .clipShape(shape).overlay(shape.strokeBorder(Color.primary.opacity(scheme == .dark ? 0.1 : 0.12)))
     }
     private struct Material: NSViewRepresentable {
         func makeNSView(context: Context) -> NSVisualEffectView {

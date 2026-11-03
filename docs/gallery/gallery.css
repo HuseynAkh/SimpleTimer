@@ -2,7 +2,7 @@
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
 body { font-family: var(--serif), serif; color: #f5f7fa; background: #080d15; -webkit-font-smoothing: antialiased; }
-.canvas { width: 1600px; height: 1100px; position: relative; overflow: hidden; background: radial-gradient(ellipse at 28% 6%, #18324b 0, transparent 55%), radial-gradient(ellipse at 96% 100%, #0a3439 0, transparent 52%), radial-gradient(ellipse at 70% 40%, #1c1736 0, transparent 45%), #0a1019; }
+.canvas { width: 1600px; height: 1100px; position: relative; overflow: hidden; background: radial-gradient(ellipse at 24% 4%, #142538 0, transparent 52%), radial-gradient(ellipse at 96% 100%, #0a2a2e 0, transparent 48%), #080b10; }
 header { position: absolute; left: 64px; right: 64px; top: 46px; display: flex; align-items: center; justify-content: space-between; }
 .brand { display: flex; align-items: center; gap: 12px; font-size: 15px; font-weight: 400; letter-spacing: .22em; text-transform: uppercase; color: #d9e3ef; }
 .brand-mark { width: 30px; height: 30px; border-radius: 7px; box-shadow: 0 0 0 1px #ffffff24, 0 4px 12px #0006; }
@@ -16,17 +16,17 @@ section { position: absolute; top: 136px; }
 .phone { position: relative; width: 356px; padding: 8px; background: linear-gradient(135deg, #748092, #252d39 24%, #0c1017 65%, #566175); border-radius: 52px; box-shadow: inset 0 0 0 1px #aeb8c257, 0 24px 60px #0006; }
 .phone::after { content: ""; width: 4px; height: 58px; background: linear-gradient(#566175,#1a222d); position: absolute; right: -3px; top: 146px; border-radius: 0 3px 3px 0; }
 .phone img { width: 100%; display: block; border-radius: 44px; border: 2px solid #05080c; }
-.desk { position: relative; height: 438px; border-radius: 18px; overflow: hidden; background: radial-gradient(ellipse at 80% 0%, #2a3c58 0, transparent 60%), linear-gradient(160deg, #1a2333, #0f141e 70%); box-shadow: inset 0 0 0 1px #ffffff14, 0 24px 60px #0006; }
-.menubar { font-family: -apple-system, "SF Pro Text", "Inter", sans-serif; height: 32px; display: flex; justify-content: flex-end; align-items: center; gap: 4px; padding: 0 14px; background: #0b0f17cc; backdrop-filter: blur(20px); border-bottom: 1px solid #ffffff12; font-size: 13.5px; font-weight: 500; color: #e9eef5; }
+.desk { position: relative; height: 438px; border-radius: 18px; overflow: hidden; background: radial-gradient(ellipse at 72% 0%, #1d2026 0, transparent 62%), linear-gradient(170deg, #121418, #0a0b0d 72%); box-shadow: inset 0 0 0 1px #ffffff12, 0 24px 60px #0008; }
+.menubar { font-family: -apple-system, "SF Pro Text", "Inter", sans-serif; height: 32px; display: flex; justify-content: flex-end; align-items: center; gap: 4px; padding: 0 14px; background: #060708e6; backdrop-filter: blur(20px); border-bottom: 1px solid #ffffff10; font-size: 13.5px; font-weight: 500; color: #e9eef5; }
 .item { display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 8px; border-radius: 6px; }
-.item.active { background: #ffffff26; }
+.item.active { background: #ffffff1f; }
 .item svg { width: 16px; height: 16px; fill: none; stroke: #e9eef5; stroke-width: 1.4; stroke-linecap: round; }
 .item svg[viewBox="0 0 22 12"] { width: 22px; height: 12px; }
 .item svg .fill { fill: #e9eef5; stroke: none; }
 .item b { font-weight: 600; font-variant-numeric: tabular-nums; }
 .clock { padding-left: 6px; }
 .mac-panel { position: absolute; top: 40px; right: 128px; width: 340px; }
-.mac-panel img { display: block; width: 100%; border-radius: 16px; box-shadow: 0 0 0 1px #ffffff1f, 0 22px 50px #000a; }
+.mac-panel img { display: block; width: 100%; border-radius: 16px; box-shadow: 0 0 0 1px #ffffff14, 0 22px 50px #000c; }
 .wrist { margin-top: 38px; }
 .watches { display: flex; gap: 34px; }
 .watch { position: relative; width: 236px; padding: 9px; border-radius: 58px; background: linear-gradient(135deg, #8d9298 0, #3a3e46 12%, #12161d 42%, #313740 76%, #777e86); box-shadow: inset 0 0 0 1px #d9e2ed57, 0 22px 45px #0007; }
