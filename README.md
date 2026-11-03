@@ -13,8 +13,10 @@ Pick a session. Start when you're ready. Nothing starts automatically.
 - Custom sessions, colours and durations.
 - Swipe between Activity, Timer and Settings, or tap the page dots.
 - System, Light and Dark appearance options.
-- Matching Pause, End and Reset controls. Reset stops the timer, restores its full duration and discards the current attempt. Saved history stays intact.
-- Pause, resume, end or reset from the app or a Live Activity.
+- One large Start and Pause button. End and Reset sit beside it while a session runs. Reset stops the timer, restores its full duration and discards the current attempt. Saved history stays intact.
+- Switching sessions mid-timer asks first, so a stray tap never ends your focus.
+- When a session completes, one tap starts a suggested break, or your last focus session after a break. Nothing starts on its own.
+- Pause, resume, end or reset from the app or a Live Activity. Optionally keep the screen on while a timer runs.
 - Activity charts and searchable history. Paused time doesn't count.
 - A report you can attach to ChatGPT, Claude or another AI app.
 - JSON history backup and import. Import skips duplicates.
