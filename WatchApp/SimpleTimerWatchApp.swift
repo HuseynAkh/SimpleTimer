@@ -8,6 +8,7 @@ import SwiftUI
             WatchTimerScreen().environmentObject(store)
                 .onChange(of: phase) { _, value in if value == .active { store.refresh() } }
         }
+        .backgroundTask(.watchConnectivity) { await store.finishBackgroundDelivery() }
     }
 }
 struct WatchTimerScreen: View {

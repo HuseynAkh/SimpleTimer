@@ -1,5 +1,6 @@
 import Foundation
 import WatchConnectivity
+import WidgetKit
 
 /// The Watch keeps its own copy of the timer, applies every tap at once and syncs with the iPhone
 /// whenever WatchConnectivity can deliver. It never waits for the phone before showing a change.
@@ -35,6 +36,8 @@ import WatchConnectivity
         state.reconcile(at: Date())
         if let data = WCSession.default.receivedApplicationContext["sync"] as? Data { receive(data) }
         if state != before { unsynced = true; persist() }
+        // Keep the widget current even when nothing changed, such as after an update or reinstall.
+        if WidgetSession.save(state.session) { WidgetCenter.shared.reloadAllTimelines() }
         // Sending this copy also asks the phone for its latest one in the reply.
         push()
     }
@@ -80,6 +83,16 @@ import WatchConnectivity
     private func persist() {
         if let data = try? JSONEncoder().encode(state) { defaults.set(data, forKey: "state") }
         defaults.set(unsynced, forKey: "unsynced")
+        if WidgetSession.save(state.session) { WidgetCenter.shared.reloadAllTimelines() }
+    }
+
+    /// Keeps a background wake alive until WatchConnectivity has delivered what it woke the app for,
+    /// so the widget reflects changes made on the iPhone even while this app is not open.
+    func finishBackgroundDelivery() async {
+        for _ in 0..<20 where WCSession.default.activationState != .activated || WCSession.default.hasContentPending {
+            try? await Task.sleep(for: .milliseconds(250))
+        }
+        refresh()
     }
 
     private static func restore(_ defaults: UserDefaults) -> TimerState {
