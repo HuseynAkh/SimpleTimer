@@ -33,7 +33,7 @@ Checked with Xcode 27, an iOS 27 iPhone simulator and a paired watchOS 27 simula
 - Activity and Settings scroll fully above the page dots; previously their last rows were cut off behind them.
 - Stopwatch mode was checked on paired iPhone 17 and Apple Watch Ultra 4 simulators in dark mode: switching modes from both devices, naming before Start, renaming while running, the Watch showing the name and elapsed time, Lock Screen pause and end, and the saved history row. The 12-hour limit is covered by tests only.
 - A stopwatch name typed before Start stayed after picking another session type and after relaunch. The page dots stay put while the keyboard is open.
-- Today's focus time now sits in the Timer page's top corner, opposite the mode switch, stacked as "2h 52m" over "today". That leaves six session types room above the page dots; at accessibility text sizes it stays under them.
+- The Timer page no longer shows today's focus time; the Activity page has it. The page now ends at the session types, seen running and with the stopwatch on the iPhone 17 simulator.
 - The stopwatch's optional name now sits under the time and status as a quiet "Add a name" line, and a name shows in secondary text. Checked on the iPhone 17 simulator in dark mode with six session types:
   - The ready and running stopwatch.
   - A name typed while running, which was saved.

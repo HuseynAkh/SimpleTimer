@@ -46,8 +46,6 @@ struct TimerScreen: View {
                         .overlay(alignment: .topTrailing) {
                             modeButton.opacity(session.isActive ? 0 : 1).disabled(session.isActive).accessibilityHidden(session.isActive)
                         }
-                        // The opposite corner holds today's focus, so the page ends at the session types.
-                        .overlay(alignment: .topLeading) { if !typeSize.isAccessibilitySize { focusedToday(compact: true).frame(height: 48) } }
                         // Fire on the first tick past the deadline; a tick inside the last
                         // second would reconcile too early and leave the timer at 00:00.
                         .onChange(of: remaining <= 0) { _, done in
@@ -79,8 +77,6 @@ struct TimerScreen: View {
                             .accessibilityAddTraits(preset.kind == store.state.selected ? .isSelected : [])
                     }
                 }.padding(.top, 10)
-                // The corner is too small at accessibility sizes, where the page scrolls anyway.
-                if typeSize.isAccessibilitySize { focusedToday(compact: false) }
             }.padding(.horizontal, 24).padding(.top, 28).padding(.bottom, 24).frame(maxWidth: 520).frame(maxWidth: .infinity)
         }
         .scrollDismissesKeyboard(.interactively)
@@ -123,23 +119,6 @@ struct TimerScreen: View {
             .onChange(of: titleDraft) { _, value in if value.count > 60 { titleDraft = String(value.prefix(60)) } }
             .onSubmit(commitTitle)
             .frame(maxWidth: 200, minHeight: 44).accessibilityLabel("Session name")
-    }
-    /// Stacked in the corner, it stays clear of the ring even at "12h 30m".
-    private func focusedToday(compact: Bool) -> some View {
-        TimelineView(.periodic(from: .now, by: 30)) { context in
-            let focus = SessionStatistics(records: store.state.records(at: context.date), interval: ReportPeriod.day.interval(containing: context.date)).focus
-            if focus >= 60 {
-                Group {
-                    if compact {
-                        VStack(alignment: .leading, spacing: 1) {
-                            Text(activityDuration(focus)).font(.footnote.weight(.semibold))
-                            Text("today").font(.caption2)
-                        }
-                    } else { Text("\(activityDuration(focus)) focused today").font(.footnote) }
-                }.foregroundStyle(.secondary).monospacedDigit()
-                    .accessibilityElement(children: .ignore).accessibilityLabel("\(activityDuration(focus)) focused today")
-            }
-        }
     }
     private var modeButton: some View {
         Button { titleFocused = false; act(untimed ? "timer" : "stopwatch") } label: {
