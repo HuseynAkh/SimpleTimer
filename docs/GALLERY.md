@@ -10,6 +10,6 @@ These are real app screens from paired simulators in dark mode. The Activity exa
 
 ## Updating the gallery
 
-The [layout](gallery/overview.html) and [styles](gallery/gallery.css) place the original screenshots without redrawing the interface. Serve this repository locally, open the layout at a 1440 × 1100 viewport and capture it to `release-images/overview.jpg`.
+The [layout](gallery/overview.html) and [styles](gallery/gallery.css) place the original screenshots without redrawing the interface. Headlines use Instrument Serif and other text uses Inter, both loaded from Google Fonts, and the header uses the app icon, so capture with network access. Serve this repository locally, open the layout at a 1440 × 1100 viewport and capture it to `release-images/overview.jpg`.
 
 Capture current controls, use a populated complete week for Activity, and check every image at full size. Strip image metadata before publishing. Keep private captures, timer backups, signing files and device identifiers out of this folder.

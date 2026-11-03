@@ -1,20 +1,19 @@
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
-body { font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif; color: #f5f7fa; background: #080d15; }
+body { font-family: "Inter", sans-serif; color: #f5f7fa; background: #080d15; -webkit-font-smoothing: antialiased; }
 .canvas { width: 1440px; height: 1100px; position: relative; overflow: hidden; background: radial-gradient(ellipse at 30% 8%, #18324b 0, transparent 57%), radial-gradient(ellipse at 95% 100%, #0a3439 0, transparent 54%), #0a1019; }
 header { position: absolute; left: 64px; right: 64px; top: 49px; display: flex; align-items: center; justify-content: space-between; }
-.brand { display: flex; align-items: center; gap: 13px; font-size: 25px; font-weight: 600; letter-spacing: -.6px; }
-.brand-mark { width: 27px; height: 27px; border: 2px solid #ecf4fd; border-radius: 50%; position: relative; }
-.brand-mark::before { content: ""; position: absolute; width: 2px; height: 8px; background: #ecf4fd; top: 4px; left: 11px; border-radius: 1px; }
-.brand-mark::after { content: ""; position: absolute; width: 7px; height: 2px; background: #ecf4fd; top: 11px; left: 11px; border-radius: 1px; }
-header p { color: #9cb0c7; font-size: 19px; margin: 0; }
+.brand { display: flex; align-items: center; gap: 14px; font-size: 24px; font-weight: 600; letter-spacing: -.5px; }
+.brand-mark { width: 44px; height: 44px; border-radius: 10px; box-shadow: 0 0 0 1px #ffffff24, 0 6px 16px #0006; }
+header p { color: #9cb0c7; font-size: 17px; font-weight: 500; letter-spacing: -.1px; margin: 0; }
 section { position: absolute; top: 139px; }
 .timer { left: 64px; }
 .activity { left: 506px; }
 .wrist { left: 970px; width: 345px; top: 196px; }
-h1, h2 { font-size: 28px; font-weight: 500; letter-spacing: -.65px; margin: 0 0 27px; }
-.wrist h2 { font-size: 38px; letter-spacing: -1.1px; margin-bottom: 13px; }
-.wrist p { color: #a9bed3; font-size: 22px; line-height: 1.45; margin: 0 0 33px; }
+h1, h2 { font-family: "Instrument Serif", serif; font-size: 36px; font-weight: 400; line-height: 1; letter-spacing: -.3px; margin: 0 0 24px; }
+em { font-style: italic; color: #b9d4f2; }
+.wrist h2 { font-size: 50px; letter-spacing: -.6px; margin-bottom: 16px; }
+.wrist p { color: #a9bed3; font-size: 20px; line-height: 1.5; letter-spacing: -.2px; margin: 0 0 30px; }
 .phone { position: relative; width: 370px; padding: 8px; background: linear-gradient(135deg, #748092, #252d39 24%, #0c1017 65%, #566175); border-radius: 53px; box-shadow: inset 0 0 0 1px #aeb8c257, 0 24px 60px #0006; }
 .phone::after { content: ""; width: 4px; height: 60px; background: linear-gradient(#566175,#1a222d); position: absolute; right: -3px; top: 151px; border-radius: 0 3px 3px 0; }
 .phone img { width: 100%; display: block; border-radius: 45px; border: 2px solid #05080c; }
@@ -24,5 +23,5 @@ h1, h2 { font-size: 28px; font-weight: 500; letter-spacing: -.65px; margin: 0 0 
 .watch img { display: block; position: relative; width: 100%; border-radius: 65px; border: 2px solid #030507; background: #000; }
 .live { margin-top: 30px; width: 345px; }
 .live img { display: block; width: 100%; border-radius: 26px; box-shadow: 0 0 0 1px #aeb8c240, 0 18px 40px #0007; }
-.note { color: #a9bed3; font-size: 20px; line-height: 1.5; margin-top: 28px; }
-footer { position: absolute; bottom: 42px; left: 64px; font-size: 16px; color: #8399b0; }
+.note { color: #a9bed3; font-size: 18px; line-height: 1.55; letter-spacing: -.15px; margin-top: 28px; }
+footer { position: absolute; bottom: 42px; left: 64px; font-size: 14px; letter-spacing: .1px; color: #7d93aa; }
