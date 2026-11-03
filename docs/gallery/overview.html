@@ -3,19 +3,35 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>SimpleTimer: timer, activity and Apple Watch</title>
+  <title>SimpleTimer: iPhone, Apple Watch and Mac</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=block">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:wght@400;700&display=block">
   <link rel="stylesheet" href="gallery.css">
 </head>
 <body>
 <main class="canvas">
-  <header><div class="brand"><img class="brand-mark" src="../../App/Assets.xcassets/AppIcon.appiconset/AppIcon-Dark.png" alt="">SimpleTimer</div><p>iPhone + Apple Watch</p></header>
-  <section class="timer"><h1>A little more <em>focus.</em></h1><div class="phone"><img src="../release-images/dashboard-running.png" alt="Running Work timer with a large Pause button between round End and Reset buttons"></div></section>
-  <section class="activity"><h2>A <em>clearer</em> picture.</h2><div class="phone"><img src="../release-images/activity.png" alt="Sample Activity week with 20 hours 15 minutes, 56 sessions, 91 percent completed and a 17 day streak"></div></section>
-  <section class="wrist"><h2>Within <em>reach.</em></h2><p>Control your iPhone timer from<br>your wrist or Lock Screen.</p><div class="watch"><img src="../release-images/watch.png" alt="Apple Watch Work timer with Pause, End and Reset controls"></div><div class="live"><img src="../release-images/live-activity.png" alt="Paused Work Live Activity with Resume, End and Reset controls"></div><div class="note">One timer. One history.<br>No account required.</div></section>
-  <footer>Real simulator screens · Sample data · Decorative device frames</footer>
+  <header><div class="brand"><img class="brand-mark" src="../../App/Assets.xcassets/AppIcon.appiconset/AppIcon-Dark.png" alt="">SimpleTimer</div><p>iPhone · Apple Watch · Mac</p></header>
+  <section class="col first"><h1>Time it, or let it run.</h1><div class="phone"><img src="../release-images/stopwatch.png" alt="Stopwatch mode on iPhone: a Deep Work session named Chapter three, 32 minutes in"></div></section>
+  <section class="col second"><h2>A clearer picture.</h2><div class="phone"><img src="../release-images/activity.png" alt="Sample Activity week with 20 hours 15 minutes, 56 sessions, 91 percent completed and a 17 day streak"></div></section>
+  <section class="side">
+    <h2>In your menu bar.</h2>
+    <div class="desk">
+      <div class="menubar" aria-hidden="true">
+        <span class="item active"><svg viewBox="0 0 16 16"><path d="M8 2.2a5.8 5.8 0 1 1-4.1 1.7M8 2.2v2.4M8 8 5.2 5.4"/></svg><b>18:42</b></span>
+        <span class="item"><svg viewBox="0 0 16 16"><path d="M2 6.2a8.6 8.6 0 0 1 12 0M4.2 8.6a5.4 5.4 0 0 1 7.6 0M6.4 11a2.3 2.3 0 0 1 3.2 0"/></svg></span>
+        <span class="item"><svg viewBox="0 0 22 12"><rect x="1" y="1.5" width="17" height="9" rx="2.5"/><rect class="fill" x="2.8" y="3.3" width="13.4" height="5.4" rx="1.2"/><path d="M20 4.6v2.8"/></svg></span>
+        <span class="item clock">Tue Nov 3&nbsp;&nbsp;9:26</span>
+      </div>
+      <div class="mac-panel"><img src="../release-images/mac-panel.png" alt="SimpleTimer for Mac: a drop-down under the menu bar with a running Work timer, its controls and session types"></div>
+    </div>
+    <h2 class="wrist">On your wrist.</h2>
+    <div class="watches">
+      <div class="watch"><img src="../release-images/watch.png" alt="Apple Watch stopwatch for Chapter three with Pause, End and Reset"></div>
+      <div class="watch"><img src="../release-images/watch-widget.png" alt="SimpleTimer widget in the Apple Watch Smart Stack showing a live Deep Work countdown"></div>
+    </div>
+  </section>
+  <footer>Real simulator and Mac screens · Sample data · Decorative frames and menu bar</footer>
 </main>
 </body>
 </html>

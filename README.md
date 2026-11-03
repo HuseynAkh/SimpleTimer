@@ -4,9 +4,9 @@ A time tracker and focus app for iPhone, built to understand how you work. Optio
 
 Pick a session. Start when you're ready. Nothing starts automatically.
 
-![SimpleTimer: a running timer, a complete week of Activity, Apple Watch and Lock Screen controls](docs/release-images/overview.jpg)
+![SimpleTimer: a named stopwatch on iPhone, a complete week of Activity, the Mac menu bar drop-down, and the Apple Watch app and widget](docs/release-images/overview.jpg)
 
-[View full-size screens](docs/GALLERY.md) · Simulator screens with sample data.
+[View full-size screens](docs/GALLERY.md) · Real app screens with sample data.
 
 ## What it does
 
