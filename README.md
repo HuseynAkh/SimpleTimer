@@ -62,11 +62,27 @@ Add the SimpleTimer widget to a watch face or the Smart Stack: large timer and s
 
 Build the `SimpleTimerWatch` scheme for a paired watch simulator or device. The watch app is also embedded in the iPhone build. See [validation](docs/VALIDATION.md) for tested behaviour and limits.
 
+## Mac menu bar
+
+A small Mac app for macOS 14+ that lives in the menu bar, with no Dock icon. Click its timer icon for a drop-down with the iPhone controls: one large Start and Pause button, End and Reset while a session runs, session types, and a stopwatch with an optional name. Space starts or pauses, and Esc closes it. Right-click a session type to change its length, or the icon for Launch at Login and Quit.
+
+While a session runs, the menu bar shows the time beside the icon. Timed sessions notify you when they finish. The Mac keeps its own timer and history in `~/Library/Application Support/SimpleTimer`. It doesn't sync with your iPhone, and it has no history screen or export.
+
+It works with menu bar managers such as Ice, Thaw and Bartender. If its icon is hidden, open SimpleTimer again from Spotlight or Finder to show the drop-down. [See the drop-down](docs/release-images/mac-panel.png).
+
+```sh
+./scripts/build-mac.sh
+open DerivedData/Build/Products/Debug/SimpleTimer.app
+```
+
+To keep it, build the `SimpleTimerMac` scheme in Xcode with your team in `Config/Local.xcconfig`, then move `SimpleTimer.app` to Applications.
+
 ## How it's built
 
 - `Core`: timer state, history, statistics, export and backup. Tested with Swift Package Manager.
 - `App`: SwiftUI iPhone screens and local notifications.
 - `LiveActivity` / `Shared`: Lock Screen controls and shared activity types.
 - `Connectivity` / `WatchApp`: WatchConnectivity remote and watch interface.
+- `Mac`: menu bar app, a SwiftUI drop-down in an AppKit panel.
 
 See [architecture](docs/ARCHITECTURE.md) and [privacy](PRIVACY.md). MIT licensed.

@@ -38,6 +38,37 @@ Checked with Xcode 27, an iOS 27 iPhone simulator and a paired watchOS 27 simula
 - The Watch widget shows only large timer and stopwatch symbols. On the watchOS 27 simulator it appeared in the widget picker, was added to the Smart Stack, rendered as designed, and a tap opened SimpleTimer on the running session. Watch face complication slots were not checked.
 - After a simulator reboot, the iPhone app needed one relaunch before WatchConnectivity delivered, and delivery then took up to about 25 seconds. Simulator checks do not prove physical Bluetooth or Wi-Fi latency.
 
+## Mac
+
+Checked on a Mac with a notched 1512 × 982 display, macOS 26.7 in dark mode and Xcode 27, with Thaw running.
+
+- Debug and Release builds succeed unsigned with `scripts/build-mac.sh`. The Release app is 2.0 MB.
+- Memory footprint is 12 MB idle, 12 MB with a stopwatch running and the drop-down closed, and 18 MB with the drop-down open, in Debug and Release. The running stopwatch used 0.18 seconds of CPU in its first 23 seconds, launch included. In a test harness running the same code, ten open and close cycles left no panel alive, and the footprint stayed near 26 MB once SwiftUI had loaded.
+- Thaw put the new item in its always-hidden section, off screen at x = -9928. Opening the app again showed the drop-down under the menu bar at the pointer, 6 pt below the 33 pt bar, at pop-up menu level. A second copy handed over to the first and quit.
+- A scratch harness ran the app's controller, panel and view in-process, with posted mouse and key events and its own home folder. It passed these checks:
+  - Mouse events sent to the item's window open and close the drop-down. An extra mouse up and a ⌘-click are ignored, and a right click shows Launch at Login and Quit.
+  - The item has a fixed autosave name and identifier and an empty title. It shows the icon alone when idle, adds the time while active, and dims when paused. Its width stays at 56 pt from second to second, and its timer runs only while a session runs.
+  - Space starts and pauses, and Resume resumes.
+  - Picking another type mid-session asks first: Cancel keeps the session, and Switch saves it as switched. End saves the session, and Reset does not.
+  - In stopwatch mode, a name typed before Start is saved on Return, survives a type change, and Space inside the field types a space. The mode button hides while a session is active.
+  - Esc, or another window taking key status, closes the drop-down and releases its view. A duration change is saved.
+  - The drop-down takes the keyboard while the frontmost app stays the same. It grows down from a fixed top edge, and its accessibility subrole is `AXSystemDialog`.
+- Relaunching the real build on that saved state restored the running named stopwatch, and its item widened from 31 to 72 pt to show the time.
+- Placement checks pass for these cases: a visible item, clamping at the screen edges, an item hidden off screen or behind the notch, an auto-hidden menu bar, an item mirrored on another display, a hidden item overlapping a display on the left, and a pointer outside every screen.
+- `docs/release-images/mac-panel.png` is drawn in-process by the Debug-only `--render-panel` argument from synthetic data: a Work session 26 minutes in, after a completed 90-minute Deep Work session. Its metadata was removed.
+
+Not checked:
+
+- Real clicks on the menu bar item or in the Thaw Bar.
+- Ice and Bartender.
+- Anchoring under a visible item after a real click.
+- Launch at Login.
+- Completion notifications: permission for the test build was still undecided.
+- A session type's duration menu opened with a real right click.
+- Full-screen Spaces, an auto-hidden menu bar and multiple displays.
+- Light mode, tiling window managers, and macOS 14, 15 or 27.
+- Running from Applications.
+
 ## Limits
 
 Watch interface changes are checked on paired simulators; no full physical Watch interaction audit is claimed. Watch commands need a reachable phone. Fresh simulator installation required reopening the iPhone app once before its connectivity daemon completed registration. Notification permission requests no longer block timer acknowledgements; system effects run separately. A physical reconnect and latency audit still requires user interaction on the devices.
