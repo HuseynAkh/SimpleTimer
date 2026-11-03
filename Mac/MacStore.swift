@@ -26,7 +26,8 @@ import UserNotifications
                 }
             }
         }
-        self.state.reconcile(at: now); syncDraft()
+        // Launch calls `refresh()`, which completes an overdue session and saves it.
+        syncDraft()
     }
     static func standard() -> MacStore {
         let directory = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]

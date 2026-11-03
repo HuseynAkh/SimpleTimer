@@ -31,7 +31,13 @@ struct WatchTimerScreen: View {
                             .accessibilityLabel(session.isUntimed ? "Time elapsed" : "Time remaining")
                             .onChange(of: session.remaining(at: context.date) <= 0) { _, done in if done && session.phase == .running { store.refresh() } }
                     }
-                    if session.phase == .paused { Text("Paused").font(.caption) }
+                    if let status = session.phase == .paused ? "Paused" : session.phase == .ended ? "Ended" : session.phase == .completed ? "Complete" : nil {
+                        Text(status).font(.caption)
+                    }
+                    // Changes always apply here first; this only appears while the iPhone is out of reach.
+                    if store.unsynced && store.away {
+                        Label("Syncs with iPhone later", systemImage: "arrow.triangle.2.circlepath").font(.caption2).foregroundStyle(.secondary)
+                    }
                     // The name is optional and set before a stopwatch starts; the iPhone can rename it later.
                     if session.isUntimed && !session.isActive {
                         TextField("Name", text: $name).accessibilityLabel("Session name")
@@ -59,11 +65,10 @@ struct WatchTimerScreen: View {
                                 .accessibilityHint(session.isUntimed ? "Clears this stopwatch without saving." : "Restores the full duration without saving this session.")
                         }
                     }
-                    NavigationLink("Sessions") { WatchSessionsScreen() }
-                    // Changes always apply here first; this only appears while the iPhone is out of reach.
-                    if store.unsynced && !store.reachable {
-                        Label("Syncs with iPhone later", systemImage: "arrow.triangle.2.circlepath").font(.caption2).foregroundStyle(.secondary)
-                    }
+                    NavigationLink { WatchSessionsScreen() } label: {
+                        Text("Sessions").frame(maxWidth: .infinity, minHeight: 44)
+                    }.buttonStyle(.plain)
+                        .background(.white.opacity(0.15), in: Capsule())
                 }.padding(.horizontal, 6)
             }
             .toolbar {

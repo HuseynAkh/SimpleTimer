@@ -6,7 +6,8 @@ import WidgetKit
 /// whenever WatchConnectivity can deliver. It never waits for the phone before showing a change.
 @MainActor final class WatchStore: NSObject, ObservableObject, WCSessionDelegate {
     @Published private(set) var state: TimerState
-    @Published private(set) var reachable = false
+    /// Set only on evidence the phone is gone, so a tap before the first reply after launch shows nothing.
+    @Published private(set) var away = false
     @Published private(set) var unsynced: Bool
     private let defaults = UserDefaults.standard
     /// The newest change the phone has replied to. Sending stops repeating only after a reply.
@@ -46,26 +47,28 @@ import WidgetKit
     private func push() {
         let session = WCSession.default
         guard session.activationState == .activated, let data = try? JSONEncoder().encode(state.envelope(from: .watch)) else { return }
-        let sent = state.changedAt; reachable = session.isReachable
+        let sent = state.changedAt
         // Delivered later if the phone is away; a direct message reaches it now when it is reachable.
         try? session.updateApplicationContext(["sync": data])
-        guard reachable else { return }
+        // Only a reply marks the phone as back: `isReachable` can stay true for a while after it leaves,
+        // which would hide "Syncs with iPhone later" until the send timed out.
+        guard session.isReachable else { away = true; return }
         let id = UUID(); awaitingReply = id
         session.sendMessage(["sync": data], replyHandler: { reply in
             // An error reply means the phone could not take the change in, so it stays queued.
             let data = reply["error"] == nil ? reply["sync"] as? Data : nil
             Task { @MainActor in
-                self.awaitingReply = nil; self.reachable = true
+                self.awaitingReply = nil; self.away = false
                 if let data { self.deliveredChange = sent; self.receive(data) }
             }
         }, errorHandler: { _ in
             // Reachability can lag; a failed send is the clearer signal that the phone is away.
-            Task { @MainActor in self.reachable = false }
+            Task { @MainActor in self.away = true }
         })
         // A reply that never comes means the same. The change is already saved here and in the context.
         Task {
             try? await Task.sleep(for: .seconds(5))
-            if awaitingReply == id { reachable = false }
+            if awaitingReply == id { away = true }
         }
     }
 
@@ -108,15 +111,11 @@ import WidgetKit
     }
 
     nonisolated func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {
-        let reachable = session.isReachable
-        Task { @MainActor in self.reachable = reachable; self.refresh() }
+        Task { @MainActor in self.refresh() }
     }
     nonisolated func sessionReachabilityDidChange(_ session: WCSession) {
         let reachable = session.isReachable
-        Task { @MainActor in
-            self.reachable = reachable
-            if reachable { self.push() }
-        }
+        Task { @MainActor in if reachable { self.push() } else { self.away = true } }
     }
     nonisolated func session(_ session: WCSession, didReceiveApplicationContext applicationContext: [String: Any]) {
         let data = applicationContext["sync"] as? Data

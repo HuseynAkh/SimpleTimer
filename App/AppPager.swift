@@ -37,6 +37,7 @@ struct AppPager: View {
             }
             .scrollTargetBehavior(.paging)
             .scrollPosition(id: $page)
+            .modifier(SettledPage(page: $page))
             .defaultScrollAnchor(.center)
             .scrollIndicators(.hidden)
         }.clipped()
@@ -68,5 +69,20 @@ struct AppPager: View {
     }
     private func select(_ value: AppPage) {
         withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.25)) { page = value }
+    }
+}
+
+/// A touch during a dot's animated scroll stops it on whichever page is showing without updating
+/// `page`, so the dots, background and accessibility would follow the wrong page. Read it back once scrolling settles.
+private struct SettledPage: ViewModifier {
+    @Binding var page: AppPage?
+    func body(content: Content) -> some View {
+        if #available(iOS 18.0, *) {
+            content.onScrollPhaseChange { _, phase, context in
+                let width = context.geometry.containerSize.width
+                guard phase == .idle, width > 0, let shown = AppPage(rawValue: Int((context.geometry.contentOffset.x / width).rounded())), shown != page else { return }
+                page = shown
+            }
+        } else { content }
     }
 }

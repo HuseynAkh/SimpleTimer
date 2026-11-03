@@ -315,7 +315,7 @@ private struct SessionDetail: View {
                     LabeledContent("Started", value: record.startedAt.formatted(date: .abbreviated, time: .shortened))
                     LabeledContent(record.isFinished ? "Finished" : "Last updated", value: record.finishedAt.formatted(date: .abbreviated, time: .shortened))
                     if record.isUntimed { LabeledContent("Mode", value: "Stopwatch") } else { LabeledContent("Planned", value: activityDuration(record.planned)) }
-                    LabeledContent("Active time", value: TimerState.clock(record.elapsed))
+                    LabeledContent("Active time", value: TimerState.clock(record.elapsed, roundsUp: false))
                     LabeledContent("Pauses", value: "\(record.pauses)")
                     LabeledContent("Paused time", value: activityDuration(max(0, record.finishedAt.timeIntervalSince(record.startedAt) - record.elapsed)))
                 }.font(.subheadline).activityCard()
@@ -339,7 +339,7 @@ private func uniquePresets(_ records: [SessionRecord]) -> [Preset] {
     return records.sorted { $0.startedAt > $1.startedAt }.compactMap { seen.insert($0.preset.kind).inserted ? $0.preset : nil }
 }
 func activityDuration(_ seconds: TimeInterval) -> String {
-    guard seconds >= 60 else { return seconds > 0 ? "<1 min" : "0 min" }
+    guard seconds >= 60 else { return seconds > 0 ? "<1m" : "0m" }
     let minutes = Int(seconds / 60)
     return minutes >= 60 ? "\(minutes / 60)h" + (minutes % 60 > 0 ? " \(minutes % 60)m" : "") : "\(minutes)m"
 }

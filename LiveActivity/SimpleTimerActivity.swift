@@ -87,11 +87,12 @@ struct SimpleTimerLiveActivity: Widget {
         if context.state.untimed == true {
             // A stopwatch has no target to measure progress against.
         } else if let end = context.state.end, context.state.phase == "running" {
+            // The timer-driven bar is taller than the static one; a shared height keeps the card still when pausing.
             ProgressView(timerInterval: end.addingTimeInterval(-context.state.duration)...end, countsDown: true)
-                .labelsHidden().tint(Palette.color(context.attributes.color))
+                .labelsHidden().tint(Palette.color(context.attributes.color)).frame(height: 6)
         } else {
             ProgressView(value: max(0, min(1, context.state.remaining / context.state.duration)))
-                .tint(Palette.color(context.attributes.color))
+                .tint(Palette.color(context.attributes.color)).frame(height: 6)
         }
     }
     @ViewBuilder private func countdown(_ context: ActivityViewContext<TimerAttributes>) -> some View {

@@ -35,40 +35,55 @@ Checked with Xcode 27, an iOS 27 iPhone simulator and a paired watchOS 27 simula
 - A stopwatch name typed before Start stayed after picking another session type and after relaunch. The page dots stay put while the keyboard is open.
 - Type stays on Apple system fonts. Countdown digits on iPhone and Watch roll between values with a numeric text transition, which was seen on paired simulators; the Reduce Motion fallback was not checked. The Activity total uses the New York serif, checked in dark mode. The session detail duration uses the same font call but was not opened. Watch countdown digits now use light SF Pro, matching iPhone and the Live Activity.
 - Rebuilt Watch sync on paired iPhone 17 and Apple Watch Ultra 4 simulators: mode switches and Start applied on the Watch at once with no waiting state. With the iPhone app quit, a Watch Start woke it in the background and both saved the same running stopwatch. With the iPhone simulator shut down, Watch Pause, End, mode changes and Start all applied immediately, "Syncs with iPhone later" appeared, and after the iPhone came back both devices converged on the same session and change time, the offline session was saved once on the iPhone and the Watch cleared its outbox.
-- The Watch widget showed the live session in the Smart Stack on the watchOS 27 simulator: a running stopwatch counting up with its name, Paused immediately after pausing in the app, and a countdown with its end time after starting a timer. A tap opened the app. A signed build with the free team carried the App Group entitlement on both the Watch app and the widget. The round, corner and inline face styles and background delivery from the iPhone while the Watch app is closed were not checked.
+- The Watch widget showed the live session in the Smart Stack on the watchOS 27 simulator: a running stopwatch counting up with its name, Paused immediately after pausing in the app, and a countdown with its end time after starting a timer. A tap opened the app. A signed build with the free team carried the App Group entitlement on both the Watch app and the widget. The round, corner and inline face styles were not checked.
 - Tapping the iPhone's mirrored Live Activity in the Watch Smart Stack opened the SimpleTimer Watch app on the paused session, not the "Open on iPhone" screen, on the watchOS 27 simulator.
 - After a simulator reboot, the iPhone app needed one relaunch before WatchConnectivity delivered, and delivery then took up to about 25 seconds. Simulator checks do not prove physical Bluetooth or Wi-Fi latency.
+- A full pass of the [simulator suite](TESTING.md) (S01 to S22) ran on paired iPhone 17 and Apple Watch Ultra 4 simulators in dark mode, restoring both apps' saved state afterwards. Everything passed except S19. With the Watch app suspended but still running, an iPhone pause reached the Watch, but the widget kept counting for over 2.5 minutes, until the app was opened. The mirrored Live Activity above it already showed Paused. With the Watch app not running, an iPhone change woke it within about 35 seconds. That may be simulator scheduling; it is unconfirmed on a device.
+- That pass found these problems, now fixed and rechecked on the same simulators:
+  - The page dots and background could follow a different page from the one showing after a touch interrupted a dot's scroll. They now follow the page it settles on; a touch during the animation returns to the starting page.
+  - The Lock Screen card moved by about 6 pt between running and paused. Every edge now stays in place.
+  - Session detail "Active time" rounded up: a stopwatch ended at 0:46 showed 0:47.
+  - Durations under a minute read "<1 min" and "0 min" beside "25m". They now read "<1m" and "0m". The empty chart's middle tick reads "<1m".
+  - The Watch now shows Ended and Complete, not only Paused.
+  - Its Sessions button is now as wide as the controls.
+  - "Syncs with iPhone later" now sits under the clock, so it shows without scrolling on the 49 mm Watch.
+  - While the iPhone was away, the label disappeared for about 5 seconds after each tap, because the Watch trusted a stale `isReachable`. It now appears only after a send error or timeout, or when the phone reports itself unreachable. It stays until a reply arrives.
+  - It no longer flashes on taps made 0.96 to 2.5 seconds after launch with the phone present. It first appears about 5 seconds after the phone leaves, and the buttons move down once.
+- Not covered by that pass: completion alerts and sound, the Dynamic Island, circular, corner and inline complications, the 12-hour limit, accessibility text sizes, VoiceOver, Reduce Motion, export and import, and light mode beyond one screen. The Live Activity mirrored on the Watch shows the app name, symbol and time but not the session name; it has no Watch-specific layout.
 
 ## Mac
 
-Checked on a Mac with a notched 1512 × 982 display, macOS 26.7 in dark mode and Xcode 27, with Thaw running.
+Checked on a Mac with a notched 1512 × 982 display, macOS 26.7 in dark mode and Xcode 27, with Thaw 2.0.1 running.
 
-- Debug and Release builds succeed unsigned with `scripts/build-mac.sh`. The Release app is 2.0 MB.
-- Memory footprint is 12 MB idle, 12 MB with a stopwatch running and the drop-down closed, and 18 MB with the drop-down open, in Debug and Release. The running stopwatch used 0.18 seconds of CPU in its first 23 seconds, launch included. In a test harness running the same code, ten open and close cycles left no panel alive, and the footprint stayed near 26 MB once SwiftUI had loaded.
-- Thaw put the new item in its always-hidden section, off screen at x = -9928. Opening the app again showed the drop-down under the menu bar at the pointer, 6 pt below the 33 pt bar, at pop-up menu level. A second copy handed over to the first and quit.
-- A scratch harness ran the app's controller, panel and view in-process, with posted mouse and key events and its own home folder. It passed these checks:
-  - Mouse events sent to the item's window open and close the drop-down. An extra mouse up and a ⌘-click are ignored, and a right click shows Launch at Login and Quit.
-  - The item has a fixed autosave name and identifier and an empty title. It shows the icon alone when idle, adds the time while active, and dims when paused. Its width stays at 56 pt from second to second, and its timer runs only while a session runs.
-  - Space starts and pauses, and Resume resumes.
-  - Picking another type mid-session asks first: Cancel keeps the session, and Switch saves it as switched. End saves the session, and Reset does not.
-  - In stopwatch mode, a name typed before Start is saved on Return, survives a type change, and Space inside the field types a space. The mode button hides while a session is active.
-  - Esc, or another window taking key status, closes the drop-down and releases its view. A duration change is saved.
-  - The drop-down takes the keyboard while the frontmost app stays the same. It grows down from a fixed top edge, and its accessibility subrole is `AXSystemDialog`.
-- Relaunching the real build on that saved state restored the running named stopwatch, and its item widened from 31 to 72 pt to show the time.
+- Debug and Release builds succeed unsigned with `scripts/build-mac.sh`. The Release app is 2.1 MB.
+- `scripts/test-mac-e2e.sh` passed all 77 checks in [the test suite](TESTING.md) (M01 to M77), and the overdue scenario passed again on a second relaunch. It runs the app's own controller, drop-down and SwiftUI view, sends mouse and key events to the real status item and drop-down, and checks the saved file after each step. The events are posted inside the process, not made with the pointer. Among other things it covers:
+  - Opening and closing from the item, a repeated mouse up and ⌘-clicks ignored, the right-click and Control-click menu, accessibility presses and reopening from Finder.
+  - The drop-down taking the keyboard while the frontmost app stays the same, at pop-up menu level with a system dialog subrole.
+  - Start, Pause, Resume, End, Reset and switching types through Space and the buttons, with one record saved for End and Switch and none for Reset.
+  - A steady 72 pt item while the time counts down, dimmed and not ticking while paused.
+  - Stopwatch names typed before Start, renamed while running and saved on Quit. Space typing in the field but starting the stopwatch elsewhere.
+  - A failed save refused with a notice that clears afterwards.
+  - Relaunching running, paused, finishing, overdue and unreadable saves.
+  - Ten open and close cycles leaving no drop-down alive.
+- That run found a timer that finished while the app was quit completing on launch but staying unsaved until the next action. Launch now saves it, once.
+- The duration menu of a session type lists 15 min to 1 hr 30 min with the current length ticked, and choosing one saves it. The harness reads the menu from the view, because a posted right click does not pop it up.
+- The installed Release build in Applications passed checks B01 to B05. It runs as one menu-bar-only process using 12 MB idle, 18 MB with the drop-down open, and 0.24 seconds of CPU from launch through opening the drop-down twice. Opening it again showed the drop-down at pop-up menu level, 6 pt below the 33 pt menu bar at the pointer, because Thaw keeps the item in its always-hidden section. A second copy handed over and quit. Thaw records the item as `<bundle ID>:SimpleTimer`.
+- In a test harness running the same code earlier, ten open and close cycles kept the footprint near 26 MB once SwiftUI had loaded. Relaunching the real build on a saved running stopwatch widened its item from 31 to 72 pt to show the time.
 - Placement checks pass for these cases: a visible item, clamping at the screen edges, an item hidden off screen or behind the notch, an auto-hidden menu bar, an item mirrored on another display, a hidden item overlapping a display on the left, and a pointer outside every screen.
 - `docs/release-images/mac-panel.png` is drawn in-process by the Debug-only `--render-panel` argument from synthetic data: a Work session 26 minutes in, after a completed 90-minute Deep Work session. Its metadata was removed.
 
 Not checked:
 
-- Real clicks on the menu bar item or in the Thaw Bar.
+- Clicks with the real pointer, on the item or in the Thaw Bar. Computer use was not approved during this run.
 - Ice and Bartender.
-- Anchoring under a visible item after a real click.
+- Anchoring under a visible item: Thaw hid the test item, so placement was checked at the pointer.
+- Clicking outside to close the drop-down. That listens for other apps' clicks, which posted events cannot produce.
+- The real pop-up of a session type's duration menu.
 - Launch at Login.
-- Completion notifications: permission for the test build was still undecided.
-- A session type's duration menu opened with a real right click.
+- Completion alerts. The harness counts the permission request instead of showing it, and permission for the installed build is still undecided.
 - Full-screen Spaces, an auto-hidden menu bar and multiple displays.
 - Light mode, tiling window managers, and macOS 14, 15 or 27.
-- Running from Applications.
+- A stopwatch name typed after End is held for the next Start but not saved before it, so quitting first drops it.
 
 ## Limits
 
