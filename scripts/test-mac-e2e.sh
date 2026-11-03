@@ -1,7 +1,9 @@
 #!/bin/zsh
 # Drives the Mac menu bar app end to end. A harness built from the current sources sends mouse and key events to
 # its real status item and drop-down. Each scenario uses its own home folder, so saved timers are never touched.
+# The full run takes the keyboard, so it waits for 60 seconds without input and stops as soon as the Mac is touched (exit 4).
 # A second SimpleTimer item appears in the menu bar while it runs. Results and drop-down images go to DerivedData/MacE2E/out.
+# --background is safe during other work: it checks the item's icon and timer with no drop-down, menu bar item or focus change.
 set -eu
 cd "${0:A:h}/.."
 export DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}"
@@ -40,9 +42,14 @@ run() {
   [[ -n "${HARNESS_KEEP:-}" ]] || { rm -rf $home; mkdir -p "$home/Library/Application Support" }
   local log=$work/out/$scenario${HARNESS_KEEP:+-again}.log
   CFFIXED_USER_HOME=$PWD/$home HARNESS_SCENARIO=$scenario HARNESS_OUT=$PWD/$work/out $app/Contents/MacOS/Harness > $log 2>&1 || failed=1
-  grep -E '^(PASS|FAIL|SUMMARY|TIMEOUT|refusing)' $log || true
+  grep -E '^(PASS|FAIL|SUMMARY|TIMEOUT|refusing|OUTSIDE|WAITING|STOPPED)' $log || true
+  grep -q '^STOPPED' $log && { print 'Stopped because the Mac was in use. Run it again when you are away.'; exit 4 }
+  return 0
 }
-for scenario in fresh restore paused deadline overdue damaged; do run $scenario; done
+scenarios=(fresh restore paused deadline overdue damaged)
+if [[ "${1:-}" == --background ]]; then scenarios=(quiet paused overdue)
+else print 'Waiting for 60 seconds without mouse or keyboard input, then taking the keyboard. Any input stops the run.'; fi
+for scenario in $scenarios; do run $scenario; done
 # Relaunching after an overdue completion must not save it twice.
 HARNESS_KEEP=1 run overdue
 exit $failed

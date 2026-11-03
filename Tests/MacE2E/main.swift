@@ -19,6 +19,11 @@ import UserNotifications
 
     init(app: MenuBarApp, scenario: String, file: StateFile, out: URL) {
         self.app = app; self.scenario = scenario; self.file = file; self.out = out
+        // A click outside closes the drop-down and fails the steps after it, so name its source in the log.
+        NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown, .otherMouseDown]) { event in
+            let pid = event.cgEvent?.getIntegerValueField(.eventSourceUnixProcessID) ?? 0
+            print("OUTSIDE click from pid \(pid) \(NSRunningApplication(processIdentifier: pid_t(pid))?.localizedName ?? "(hardware)")"); fflush(stdout)
+        }
         NotificationCenter.default.addObserver(forName: NSMenu.didBeginTrackingNotification, object: nil, queue: nil) { [weak self] note in
             MainActor.assumeIsolated {
                 guard let self, let menu = note.object as? NSMenu else { return }
@@ -120,8 +125,13 @@ import UserNotifications
 
     // MARK: Scenarios
     func run() async {
+        while app.item == nil { await wait(0.01) }
+        // Scenarios that never open the drop-down also keep the test item out of the menu bar, so a manager doesn't move it.
+        if !opensDropDown { app.item.isVisible = false }
+        if opensDropDown || ProcessInfo.processInfo.environment["HARNESS_STOP_ON_INPUT"] != nil { stopOnInput() }
         await wait(0.8)
         switch scenario {
+        case "quiet": await quiet()
         case "fresh": await fresh()
         case "restore": await restore()
         case "paused": await paused()
@@ -135,6 +145,44 @@ import UserNotifications
         try? data.write(to: out.appendingPathComponent("\(scenario).json"))
         print("SUMMARY \(scenario): \(results.count - failures) passed, \(failures) failed"); fflush(stdout)
         exit(failures == 0 ? 0 : 1)
+    }
+
+    /// The drop-down takes the keyboard, so give it back the moment someone touches the Mac. Posted events don't count here.
+    func stopOnInput() {
+        var last = secondsSinceInput()
+        Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
+            let now = secondsSinceInput()
+            if now < last { print("STOPPED by mouse or keyboard input"); fflush(stdout); exit(4) }
+            last = now
+        }
+    }
+
+    /// Runs alongside other work: no drop-down, no menu bar item, nothing that takes focus.
+    func quiet() async {
+        let store = app.store, front = NSWorkspace.shared.frontmostApplication?.processIdentifier
+        let idle = button.image?.size ?? .zero
+        check("Q01 icon: 15 pt semibold timer template at 19 pt", button.image?.isTemplate == true && idle == NSSize(width: 19, height: 19) && button.accessibilityValue() == nil, "\(idle)")
+        store.act("start"); await wait(0.3)
+        let value = button.accessibilityValue() as? String
+        check("Q02 running: time beside the icon, with a ticker", value?.contains(":") == true && (button.image?.size.width ?? 0) > idle.width && app.ticker != nil, "\(String(describing: value))")
+        var widths: [CGFloat] = [], values: [String] = []
+        for _ in 0..<4 { widths.append(button.image?.size.width ?? 0); values.append(button.accessibilityValue() as? String ?? ""); await wait(1) }
+        check("Q03 running: width stays the same each second", Set(widths).count == 1, "\(widths)")
+        check("Q04 running: time counts down", Set(values).count >= 3, "\(values)")
+        store.act("pause"); await wait(0.2)
+        check("Q05 paused: dims and stops ticking", button.appearsDisabled && app.ticker == nil)
+        store.act("resume"); await wait(0.2)
+        check("Q06 resumed: ticks again", !button.appearsDisabled && app.ticker != nil)
+        store.act("end"); await wait(0.2)
+        check("Q07 ended: icon only, one ended record saved", button.accessibilityValue() == nil && saved?.history.last?.outcome == .ended && saved?.history.count == 1)
+        store.act("stopwatch"); await wait(0.2)
+        let stopwatch = button.image?.size ?? .zero
+        check("Q08 stopwatch: its icon is the same weight, within 2 pt in size", abs(stopwatch.height - idle.height) <= 2 && button.image?.isTemplate == true, "\(stopwatch)")
+        store.act("start"); await wait(1.2)
+        check("Q09 stopwatch: counts up", (button.accessibilityValue() as? String).map { $0 != "0:00" } == true, "\(String(describing: button.accessibilityValue()))")
+        store.act("reset"); await wait(0.2)
+        check("Q10 reset: icon only, nothing more saved", button.accessibilityValue() == nil && saved?.history.count == 1)
+        check("Q11 focus: no drop-down or key window, and the frontmost app is someone else", app.panel == nil && NSApp.keyWindow == nil && NSWorkspace.shared.frontmostApplication?.processIdentifier != getpid(), "front \(String(describing: front))")
     }
 
     func fresh() async {
@@ -152,6 +200,7 @@ import UserNotifications
         // Opening and closing from the item
         NSApp.deactivate(); await wait(0.3)
         let frontBefore = NSWorkspace.shared.frontmostApplication?.bundleIdentifier
+        let pointerBefore = NSEvent.mouseLocation.x
         await clickItem()
         check("M05 click: left click opens the drop-down", app.panel?.isVisible == true)
         if let panel = app.panel {
@@ -162,11 +211,12 @@ import UserNotifications
                   panel.level == .popUpMenu && panel.collectionBehavior.contains(.canJoinAllSpaces) && panel.collectionBehavior.contains(.fullScreenAuxiliary))
             check("M08 panel: system dialog subrole for tiling window managers", panel.accessibilitySubrole() == .systemDialog, "\(String(describing: panel.accessibilitySubrole()))")
             check("M09 panel: keyboard starts on the view, not a text field", !(panel.firstResponder is NSText))
-            let item = button.window!.frame, screen = NSScreen.screens.first { $0.frame.insetBy(dx: -1, dy: -1).contains(NSEvent.mouseLocation) } ?? NSScreen.main!
+            let item = button.window!.frame, screen = NSScreen.screens.first { $0.frame.intersects(panel.frame) } ?? NSScreen.main!
             let bar = MenuBarScreen(screen), shown = bar.shows(item)
             let top = min(shown ? item.minY : screen.frame.maxY - bar.barHeight, screen.frame.maxY - bar.barHeight) - PanelPlacement.gap
             let anchored = shown ? abs(panel.frame.midX - item.midX) < 1 || panel.frame.minX <= screen.visibleFrame.minX + 9 || panel.frame.maxX >= screen.visibleFrame.maxX - 9
-                                 : abs(panel.frame.midX - NSEvent.mouseLocation.x) < 1 || panel.frame.minX <= screen.visibleFrame.minX + 9 || panel.frame.maxX >= screen.visibleFrame.maxX - 9
+                                 // The pointer may have moved since the click, so accept anywhere it has been.
+                                 : (min(pointerBefore, NSEvent.mouseLocation.x) - 1...max(pointerBefore, NSEvent.mouseLocation.x) + 1).contains(panel.frame.midX) || panel.frame.minX <= screen.visibleFrame.minX + 9 || panel.frame.maxX >= screen.visibleFrame.maxX - 9
             check("M10 panel: placed \(shown ? "under the visible item" : "under the menu bar at the pointer (item hidden)"), 6 pt below the bar",
                   abs(panel.frame.maxY - top) < 1 && anchored && screen.frame.contains(panel.frame),
                   "item \(item) panel \(panel.frame) screen \(screen.frame) bar \(bar.barHeight)")
@@ -406,7 +456,15 @@ import UserNotifications
 }
 
 // MARK: Launch
+func secondsSinceInput() -> Double { CGEventSource.secondsSinceLastEventType(.hidSystemState, eventType: CGEventType(rawValue: ~0)!) }
 let scenario = ProcessInfo.processInfo.environment["HARNESS_SCENARIO"] ?? "fresh"
+let opensDropDown = !["quiet", "paused", "overdue"].contains(scenario)
+if opensDropDown {
+    // Never take the keyboard from someone using the Mac.
+    let idle = Double(ProcessInfo.processInfo.environment["HARNESS_IDLE"] ?? "") ?? 60
+    if secondsSinceInput() < idle { print("WAITING for \(Int(idle)) seconds without mouse or keyboard input"); fflush(stdout) }
+    while secondsSinceInput() < idle { sleep(2) }
+}
 let home = ProcessInfo.processInfo.environment["CFFIXED_USER_HOME"] ?? ""
 let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
 guard !home.isEmpty, support.resolvingSymlinksInPath().path.hasPrefix(URL(fileURLWithPath: home).resolvingSymlinksInPath().path) else { print("refusing: Application Support is not inside the test home (\(support.path))"); exit(2) }

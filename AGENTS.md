@@ -26,7 +26,8 @@ SimpleTimer is a public, MIT-licensed iPhone time tracker with a Live Activity a
 ```sh
 ./scripts/test-core.sh          # swift test for Core
 ./scripts/build-simulator.sh    # iPhone + Live Activity + embedded Watch app, unsigned
-./scripts/test-mac-e2e.sh       # Mac menu bar app end to end; adds a second menu bar item while it runs
+./scripts/test-mac-e2e.sh       # Mac app end to end; takes the keyboard, so it waits for an idle Mac and stops on input
+./scripts/test-mac-e2e.sh --background   # Mac icon and timer checks, safe while someone is using the Mac
 python3 scripts/audit-public.py --identity --staged   # what the pre-commit hook runs
 python3 scripts/test-public-guard.py                   # tests for the audit itself
 ```

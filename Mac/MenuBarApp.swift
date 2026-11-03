@@ -126,7 +126,8 @@ import UserNotifications
     }
     private func symbol(_ name: String) -> NSImage {
         let image = NSImage(systemSymbolName: name, accessibilityDescription: "SimpleTimer")!
-            .withSymbolConfiguration(.init(pointSize: font.pointSize, weight: .regular))!
+            // Larger and heavier than the 13 pt menu bar text, to sit level with system and third-party icons.
+            .withSymbolConfiguration(.init(pointSize: 15, weight: .semibold))!
         image.isTemplate = true
         return image
     }

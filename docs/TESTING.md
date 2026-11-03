@@ -1,6 +1,6 @@
 # Test suite
 
-Six suites with 186 named subtasks: 63 Core tests, 11 audit tests, 77 scripted Mac checks, 5 checks of the installed Mac app, 22 paired-simulator checks and 8 checks of the publishing setup. Results, and what has not been checked, are in [VALIDATION.md](VALIDATION.md).
+Seven suites with 197 named subtasks: 63 Core tests, 11 audit tests, 77 scripted Mac checks, 5 checks of the installed Mac app, 22 paired-simulator checks, 8 checks of the publishing setup and 11 Mac background checks. Results, and what has not been checked, are in [VALIDATION.md](VALIDATION.md).
 
 | Suite | Subtasks | How it runs |
 |---|---|---|
@@ -10,6 +10,7 @@ Six suites with 186 named subtasks: 63 Core tests, 11 audit tests, 77 scripted M
 | 4. Installed Mac app | 5 | Shell commands against the app in Applications |
 | 5. iPhone and Watch end to end | 22 | By hand on paired simulators |
 | 6. Publishing | 8 | `scripts/audit-public.py` and CI |
+| 7. Mac background | 11 | `./scripts/test-mac-e2e.sh --background` |
 
 ## 1. Core unit tests (63)
 
@@ -32,7 +33,7 @@ XCTest in `Tests/TimerCoreTests`, with a fixed `now` and no wall clock.
 
 ## 3. Mac end to end (77)
 
-`scripts/test-mac-e2e.sh` builds `Tests/MacE2E/main.swift` with copies of the Mac and Core sources, so the real controller, drop-down and SwiftUI view run. It sends mouse and key events to the real status item and drop-down, reads the drop-down through accessibility and checks the saved file after each step. Each scenario has its own home folder; the overdue scenario runs twice to check a relaunch saves nothing twice. While it runs, a second SimpleTimer item sits in the menu bar, and a manager like Thaw may file it into a section. The permission prompt for alerts is counted, not shown.
+`scripts/test-mac-e2e.sh` builds `Tests/MacE2E/main.swift` with copies of the Mac and Core sources, so the real controller, drop-down and SwiftUI view run. It sends mouse and key events to the real status item and drop-down, reads the drop-down through accessibility and checks the saved file after each step. Each scenario has its own home folder; the overdue scenario runs twice to check a relaunch saves nothing twice. While it runs, a second SimpleTimer item sits in the menu bar, and a manager like Thaw may file it into a section. The permission prompt for alerts is counted, not shown. The drop-down takes the keyboard, so the run waits for 60 seconds without mouse or keyboard input and stops with exit code 4 as soon as either is used. To work at the same time, use [the background checks](#7-mac-background-11). The log names real clicks as `OUTSIDE`.
 
 **Launch** (scenario `fresh`)
 
@@ -194,3 +195,21 @@ Paired iPhone and Apple Watch simulators in dark mode, using an ad-hoc signed De
 | P06 | Images carry no metadata |
 | P07 | CI "Core tests" passes on `main` |
 | P08 | The public snapshot builds with the example configuration |
+
+## 7. Mac background (11)
+
+`./scripts/test-mac-e2e.sh --background` is safe during other work. It opens no drop-down, keeps its item out of the menu bar and takes no focus, because it drives the store directly and reads the item's image and state. It also runs the two paused relaunch checks and the overdue check (M69, M70 and M75). It does not replace suite 3: nothing here tests clicks or the drop-down.
+
+| ID | Check |
+|---|---|
+| Q01 | The idle icon is the 15 pt semibold timer template |
+| Q02 | Running shows the time beside the icon, with a ticker |
+| Q03 | The width stays the same each second |
+| Q04 | The time counts down |
+| Q05 | Pausing dims the item and stops the ticker |
+| Q06 | Resuming ticks again |
+| Q07 | End returns to the icon and saves one ended record |
+| Q08 | The stopwatch icon is the same weight and within 2 pt in size |
+| Q09 | The stopwatch counts up |
+| Q10 | Reset returns to the icon and saves nothing more |
+| Q11 | No drop-down or key window, and another app stays frontmost |

@@ -38,7 +38,7 @@ Checked with Xcode 27, an iOS 27 iPhone simulator and a paired watchOS 27 simula
   - The ready and running stopwatch.
   - A name typed while running, which was saved.
   - The largest accessibility text size, where the status and name stay inside the ring.
-- The Mac drop-down matches, with "Add a name" under the time. The Mac suite passed again.
+- The Mac drop-down matches, with "Add a name" under the time. The Mac suite passed again on that build.
 - Type stays on Apple system fonts. Countdown digits on iPhone and Watch roll between values with a numeric text transition, which was seen on paired simulators; the Reduce Motion fallback was not checked. The Activity total uses the New York serif, checked in dark mode. The session detail duration uses the same font call but was not opened. Watch countdown digits now use light SF Pro, matching iPhone and the Live Activity.
 - Rebuilt Watch sync on paired iPhone 17 and Apple Watch Ultra 4 simulators: mode switches and Start applied on the Watch at once with no waiting state. With the iPhone app quit, a Watch Start woke it in the background and both saved the same running stopwatch. With the iPhone simulator shut down, Watch Pause, End, mode changes and Start all applied immediately, "Syncs with iPhone later" appeared, and after the iPhone came back both devices converged on the same session and change time, the offline session was saved once on the iPhone and the Watch cleared its outbox.
 - The Watch widget showed the live session in the Smart Stack on the watchOS 27 simulator: a running stopwatch counting up with its name, Paused immediately after pausing in the app, and a countdown with its end time after starting a timer. A tap opened the app. A signed build with the free team carried the App Group entitlement on both the Watch app and the widget. The round, corner and inline face styles were not checked.
@@ -67,15 +67,16 @@ Checked on a Mac with a notched 1512 × 982 display, macOS 26.7 in dark mode and
   - Opening and closing from the item, a repeated mouse up and ⌘-clicks ignored, the right-click and Control-click menu, accessibility presses and reopening from Finder.
   - The drop-down taking the keyboard while the frontmost app stays the same, at pop-up menu level with a system dialog subrole.
   - Start, Pause, Resume, End, Reset and switching types through Space and the buttons, with one record saved for End and Switch and none for Reset.
-  - A steady 72 pt item while the time counts down, dimmed and not ticking while paused.
+  - A steady item width while the time counts down, dimmed and not ticking while paused.
   - Stopwatch names typed before Start, renamed while running and saved on Quit. Space typing in the field but starting the stopwatch elsewhere.
   - A failed save refused with a notice that clears afterwards.
   - Relaunching running, paused, finishing, overdue and unreadable saves.
   - Ten open and close cycles leaving no drop-down alive.
+- The menu bar icon is now a 15 pt semibold symbol, so the item is 35 pt idle and 76 pt with a timer running. The 11 background checks and the paused and overdue relaunch checks passed repeatedly while the Mac was in use. The full suite has not had a clean run since this change: real clicks closed the drop-down during those attempts, and the best one passed 64 of 65 checks in its first scenario. M10 failed when the pointer moved, and now tolerates that, but that fix has not been run through a full pass either. The new icon has not been seen beside other icons in a real menu bar.
 - That run found a timer that finished while the app was quit completing on launch but staying unsaved until the next action. Launch now saves it, once.
 - The duration menu of a session type lists 15 min to 1 hr 30 min with the current length ticked, and choosing one saves it. The harness reads the menu from the view, because a posted right click does not pop it up.
 - The installed Release build in Applications passed checks B01 to B05. It runs as one menu-bar-only process using 12 MB idle, 18 MB with the drop-down open, and 0.24 seconds of CPU from launch through opening the drop-down twice. Opening it again showed the drop-down at pop-up menu level, 6 pt below the 33 pt menu bar at the pointer, because Thaw keeps the item in its always-hidden section. A second copy handed over and quit. Thaw records the item as `<bundle ID>:SimpleTimer`.
-- In a test harness running the same code earlier, ten open and close cycles kept the footprint near 26 MB once SwiftUI had loaded. Relaunching the real build on a saved running stopwatch widened its item from 31 to 72 pt to show the time.
+- In a test harness running the same code earlier, ten open and close cycles kept the footprint near 26 MB once SwiftUI had loaded. Relaunching the real build on a saved running stopwatch widened its item to show the time.
 - Placement checks pass for these cases: a visible item, clamping at the screen edges, an item hidden off screen or behind the notch, an auto-hidden menu bar, an item mirrored on another display, a hidden item overlapping a display on the left, and a pointer outside every screen.
 - `docs/release-images/mac-panel.png` is drawn in-process by the Debug-only `--render-panel` argument from synthetic data: a Work session 26 minutes in, after a completed 90-minute Deep Work session. Its metadata was removed.
 
@@ -88,7 +89,7 @@ Not checked:
 - The real pop-up of a session type's duration menu.
 - Launch at Login.
 - Completion alerts. The harness counts the permission request instead of showing it, and permission for the installed build is still undecided.
-- Full-screen Spaces, an auto-hidden menu bar and multiple displays.
+- Full-screen Spaces and an auto-hidden menu bar. With two external displays and "Displays have separate Spaces" off, the drop-down opened at the pointer on an external display, which has no menu bar.
 - Light mode, tiling window managers, and macOS 14, 15 or 27.
 - A stopwatch name typed after End is held for the next Start but not saved before it, so quitting first drops it.
 
