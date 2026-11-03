@@ -252,8 +252,8 @@ private struct HistoryView: View {
     @State private var outcome = "All"
     private var filtered: [SessionRecord] {
         records.filter { record in
-            (search.isEmpty || record.preset.name.localizedCaseInsensitiveContains(search)) &&
-            (outcome == "All" || (outcome == "Completed" ? record.outcome == .completed : record.outcome != .completed && record.isFinished))
+            (search.isEmpty || record.displayName.localizedCaseInsensitiveContains(search) || record.preset.name.localizedCaseInsensitiveContains(search)) &&
+            (outcome == "All" || (outcome == "Stopwatch" ? record.isUntimed : !record.isUntimed && (outcome == "Completed" ? record.outcome == .completed : record.outcome != .completed && record.isFinished)))
         }.sorted { $0.startedAt > $1.startedAt }
     }
     private var days: [Date] { Array(Set(filtered.map { Calendar.current.startOfDay(for: $0.startedAt) })).sorted(by: >) }
@@ -263,7 +263,7 @@ private struct HistoryView: View {
                 HStack {
                     Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
                     TextField("Search sessions", text: $search).autocorrectionDisabled()
-                    Menu { Picker("Status", selection: $outcome) { ForEach(["All", "Completed", "Ended early"], id: \.self) { Text($0) } } }
+                    Menu { Picker("Status", selection: $outcome) { ForEach(["All", "Completed", "Ended early", "Stopwatch"], id: \.self) { Text($0) } } }
                         label: { Image(systemName: "line.3.horizontal.decrease").frame(width: 44, height: 44).contentShape(Rectangle()) }
                         .accessibilityLabel("Filter history, \(outcome)")
                 }.padding(.leading, 16).padding(.trailing, 6).modifier(ContentSurface())
@@ -291,8 +291,8 @@ private struct HistoryRow: View {
         layout {
             RoundedRectangle(cornerRadius: 2).fill(Palette.chartColor(record.preset.color)).frame(width: 4, height: 30).accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 4) {
-                Text(record.preset.name).font(.body.weight(.medium)).fixedSize(horizontal: false, vertical: true)
-                Text("\(record.startedAt.formatted(date: .omitted, time: .shortened)) · \(record.outcome.label)").font(.caption).foregroundStyle(.secondary)
+                Text(record.displayName).font(.body.weight(.medium)).fixedSize(horizontal: false, vertical: true)
+                Text([record.title == nil ? nil : record.preset.name, record.startedAt.formatted(date: .omitted, time: .shortened), record.statusLabel].compactMap { $0 }.joined(separator: " · ")).font(.caption).foregroundStyle(.secondary)
             }
             if !typeSize.isAccessibilitySize { Spacer(minLength: 8) }
             Text(activityDuration(record.elapsed)).font(.subheadline).monospacedDigit()
@@ -307,14 +307,14 @@ private struct SessionDetail: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text(record.preset.name).font(.title2.weight(.medium))
+                    Text(record.displayName).font(.title2.weight(.medium))
                     Text(activityDuration(record.elapsed)).font(.system(size: detailSize, weight: .medium, design: .serif)).monospacedDigit()
-                    Text(record.outcome.label).font(.subheadline).foregroundStyle(.secondary)
+                    Text(record.title == nil ? record.statusLabel : "\(record.preset.name) · \(record.statusLabel)").font(.subheadline).foregroundStyle(.secondary)
                 }.frame(maxWidth: .infinity, alignment: .leading).activityCard()
                 VStack(spacing: 18) {
                     LabeledContent("Started", value: record.startedAt.formatted(date: .abbreviated, time: .shortened))
                     LabeledContent(record.isFinished ? "Finished" : "Last updated", value: record.finishedAt.formatted(date: .abbreviated, time: .shortened))
-                    LabeledContent("Planned", value: activityDuration(record.planned))
+                    if record.isUntimed { LabeledContent("Mode", value: "Stopwatch") } else { LabeledContent("Planned", value: activityDuration(record.planned)) }
                     LabeledContent("Active time", value: TimerState.clock(record.elapsed))
                     LabeledContent("Pauses", value: "\(record.pauses)")
                     LabeledContent("Paused time", value: activityDuration(max(0, record.finishedAt.timeIntervalSince(record.startedAt) - record.elapsed)))
@@ -325,6 +325,11 @@ private struct SessionDetail: View {
 }
 private extension View {
     func activityCard() -> some View { padding(18).modifier(ContentSurface()) }
+}
+extension SessionRecord {
+    var displayName: String { title ?? preset.name }
+    /// A finished stopwatch has no target, so "Ended early" would mislead.
+    var statusLabel: String { isUntimed && isFinished ? "Stopwatch" : outcome.label }
 }
 private extension SessionOutcome {
     var label: String { switch self { case .completed: "Completed"; case .ended: "Ended early"; case .reset: "Reset"; case .switched: "Switched"; case .running: "Running"; case .paused: "Paused" } }

@@ -36,9 +36,19 @@ public struct Session: Codable, Equatable, Sendable {
     public var spans: [RunSpan]?
     public var pauseCount: Int?
     public var phase: Phase
-    public init(preset: Preset) { id = UUID(); self.preset = preset; duration = Double(preset.minutes * 60); remaining = duration; end = nil; phase = .ready }
+    /// Stopwatch sessions count up. Optional fields keep older saves and companions decodable.
+    public var untimed: Bool?
+    public var title: String?
+    /// A forgotten stopwatch stops and saves itself here, which also keeps backups within import bounds.
+    public static let stopwatchLimit: TimeInterval = 12 * 3600
+    public init(preset: Preset, untimed: Bool = false) {
+        id = UUID(); self.preset = preset; self.untimed = untimed ? true : nil
+        duration = untimed ? Self.stopwatchLimit : Double(preset.minutes * 60); remaining = duration; end = nil; phase = .ready
+    }
     public func remaining(at now: Date) -> TimeInterval { max(0, phase == .running ? (end?.timeIntervalSince(now) ?? remaining) : remaining) }
+    public func elapsed(at now: Date) -> TimeInterval { duration - remaining(at: now) }
     public var isActive: Bool { phase == .running || phase == .paused }
+    public var isUntimed: Bool { untimed == true }
 }
 public struct TimerState: Codable, Equatable, Sendable {
     public var presets = Preset.defaults
@@ -75,7 +85,7 @@ public struct TimerState: Codable, Equatable, Sendable {
         if let start = session.runningSince { spans.append(RunSpan(start: start, end: min(now, session.end ?? now))) }
         return SessionRecord(id: session.id, preset: session.preset, startedAt: startedAt,
                              finishedAt: max(startedAt, now), planned: session.duration, spans: spans,
-                             pauses: session.pauseCount ?? 0, outcome: outcome)
+                             pauses: session.pauseCount ?? 0, outcome: outcome, title: session.title, untimed: session.untimed)
     }
     public func records(at now: Date) -> [SessionRecord] {
         var copy = self; copy.reconcile(at: now)
@@ -87,8 +97,10 @@ public struct TimerState: Codable, Equatable, Sendable {
     public mutating func reconcile(at now: Date) {
         if session.phase == .running && session.remaining(at: now) <= 0 {
             let finished = session.end ?? now
-            closeSpan(at: finished); archive(.completed, at: finished)
-            session.phase = .completed; session.remaining = 0; session.end = nil
+            // A stopwatch has no target, so reaching its limit ends it rather than completing it.
+            let outcome: SessionOutcome = session.isUntimed ? .ended : .completed
+            closeSpan(at: finished); archive(outcome, at: finished)
+            session.phase = session.isUntimed ? .ended : .completed; session.remaining = 0; session.end = nil
         }
     }
     public mutating func start(at now: Date) {
@@ -117,20 +129,30 @@ public struct TimerState: Codable, Equatable, Sendable {
         if kind == selected { return reset(confirmed: confirmed, at: now) }
         reconcile(at: now)
         if session.isActive { closeSpan(at: now); archive(.switched, at: now) }
-        selected = kind; session = Session(preset: preset); return true
+        selected = kind; session = Session(preset: preset, untimed: session.isUntimed); return true
     }
     @discardableResult public mutating func reset(confirmed: Bool = false, at now: Date = Date()) -> Bool {
         guard !session.isActive || confirmed,
               let preset = presets.first(where: { $0.kind == selected }) else { return false }
         // Reset discards only the current attempt. Do not reconcile/archive it,
         // even if its deadline just passed. Previously saved history stays intact.
-        session = Session(preset: preset)
+        session = Session(preset: preset, untimed: session.isUntimed)
         return true
+    }
+    /// Switching between timer and stopwatch never interrupts a running or paused session.
+    @discardableResult public mutating func setMode(untimed: Bool) -> Bool {
+        guard !session.isActive, let preset = presets.first(where: { $0.kind == selected }) else { return false }
+        if session.isUntimed != untimed { session = Session(preset: preset, untimed: untimed) }
+        return true
+    }
+    public static func normalizedTitle(_ value: String?) -> String? {
+        let trimmed = String((value ?? "").trimmingCharacters(in: .whitespacesAndNewlines).prefix(60))
+        return trimmed.isEmpty ? nil : trimmed
     }
     public mutating func edit(_ preset: Preset) {
         guard (1...240).contains(preset.minutes), let index = presets.firstIndex(where: { $0.kind == preset.kind }) else { return }
         presets[index] = preset
-        if session.phase == .ready && selected == preset.kind { session = Session(preset: preset) }
+        if session.phase == .ready && selected == preset.kind { session = Session(preset: preset, untimed: session.isUntimed) }
     }
     public mutating func restoreDefaults() { presets = Preset.defaults + presets.filter { $0.kind.isCustom }; if session.phase == .ready { _ = reset() } }
     @discardableResult public mutating func addPreset(name: String, minutes: Int, color: String) -> SessionKind? {
@@ -146,8 +168,9 @@ public struct TimerState: Codable, Equatable, Sendable {
         if selected == kind { _ = select(.work) }
         return true
     }
-    public static func clock(_ seconds: TimeInterval) -> String {
-        let s = Int(ceil(max(0, seconds))), h = s / 3600, m = (s % 3600) / 60
+    /// Countdowns round up so 00:00 means done; a stopwatch rounds down so it starts at 00:00.
+    public static func clock(_ seconds: TimeInterval, roundsUp: Bool = true) -> String {
+        let value = max(0, seconds), s = Int(roundsUp ? ceil(value) : floor(value)), h = s / 3600, m = (s % 3600) / 60
         return h > 0 ? String(format: "%d:%02d:%02d", h, m, s % 60) : String(format: "%02d:%02d", m, s % 60)
     }
 }

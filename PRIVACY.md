@@ -4,7 +4,7 @@ SimpleTimer stores sessions, settings and history in its local app container. It
 
 The paired Apple Watch receives the current timer and session presets through Apple's WatchConnectivity. Complete history stays on the iPhone.
 
-Export is explicit. AI reports contain dates, durations, pauses and outcomes, plus session names only if enabled. JSON backups contain full finished-session records, including names. Review a report before sharing it. Once you share it, the destination app's privacy rules apply.
+Export is explicit. AI reports contain dates, durations, pauses and outcomes, plus session names and stopwatch names only if enabled. JSON backups contain full finished-session records, including all names. Review a report before sharing it. Once you share it, the destination app's privacy rules apply.
 
 Temporary AI reports are stored in the app's temporary directory; a new report replaces the previous temporary report. Saved exports outside the app remain until you remove them. Device backups may contain app data according to your system settings. Deleting SimpleTimer removes its local app data. Export a backup first if you want to keep history.
 

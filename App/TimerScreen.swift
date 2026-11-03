@@ -9,27 +9,39 @@ struct TimerScreen: View {
     @Environment(\.legibilityWeight) private var legibility
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var switching: Preset?
+    @State private var titleDraft = ""
+    @FocusState private var titleFocused: Bool
     private var session: Session { store.state.session }
+    private var untimed: Bool { session.isUntimed }
     private var accent: Color { Palette.chartColor(session.preset.color) }
     var body: some View {
         ScrollView {
             VStack(spacing: 24) {
                 TimelineView(.periodic(from: .now, by: 1)) { context in
-                    let remaining = session.remaining(at: context.date)
+                    let remaining = session.remaining(at: context.date), elapsed = session.elapsed(at: context.date)
+                    let shown = untimed ? TimerState.clock(elapsed, roundsUp: false) : TimerState.clock(remaining)
+                    // A stopwatch has no target, so its ring sweeps once a minute instead of draining.
+                    let progress = untimed ? (session.phase == .ready ? 0 : elapsed.truncatingRemainder(dividingBy: 60) / 60) : remaining / session.duration
                     ZStack {
                         Circle().stroke(contrast == .increased ? Color(UIColor.separator) : accent.opacity(0.18), lineWidth: 6)
-                        Circle().trim(from: 0, to: max(0, min(1, remaining / session.duration)))
+                        Circle().trim(from: 0, to: max(0, min(1, progress)))
                             .stroke(accent, style: StrokeStyle(lineWidth: 6, lineCap: .round)).rotationEffect(.degrees(-90))
                         VStack(spacing: 12) {
-                            Text(TimerState.clock(remaining))
+                            if untimed { nameField }
+                            Text(shown)
                                 .font(.system(size: clockSize, weight: legibility == .bold || contrast == .increased ? .medium : .light)).monospacedDigit().minimumScaleFactor(0.45).lineLimit(1)
-                                .contentTransition(.numericText(countsDown: true)).animation(reduceMotion ? nil : .snappy, value: TimerState.clock(remaining))
-                                .accessibilityLabel("Time remaining").accessibilityValue(TimerState.clock(remaining))
+                                .contentTransition(.numericText(countsDown: !untimed)).animation(reduceMotion ? nil : .snappy, value: shown)
+                                .accessibilityLabel(untimed ? "Time elapsed" : "Time remaining").accessibilityValue(shown)
                             if let status { Text(status).font(.subheadline).foregroundStyle(.secondary) }
                         }.padding(22)
                     }.frame(width: typeSize.isAccessibilitySize ? 300 : 280, height: typeSize.isAccessibilitySize ? 300 : 280)
                         .background { Circle().fill(scheme == .dark ? Color.black.opacity(0.16) : Color.white.opacity(0.48)) }
                         .padding(.vertical, 4)
+                        // The ring is round, so its square's corner holds the mode switch without extra height.
+                        .frame(maxWidth: .infinity)
+                        .overlay(alignment: .topTrailing) {
+                            modeButton.opacity(session.isActive ? 0 : 1).disabled(session.isActive).accessibilityHidden(session.isActive)
+                        }
                         // Fire on the first tick past the deadline; a tick inside the last
                         // second would reconcile too early and leave the timer at 00:00.
                         .onChange(of: remaining <= 0) { _, done in
@@ -49,7 +61,7 @@ struct TimerScreen: View {
 
                                 VStack(alignment: .leading, spacing: 3) {
                                     Text(preset.name).font(.body.weight(preset.kind == store.state.selected ? .semibold : .regular))
-                                    Text(durationLabel(preset.minutes)).font(.caption).foregroundStyle(.secondary)
+                                    if !untimed { Text(durationLabel(preset.minutes)).font(.caption).foregroundStyle(.secondary) }
                                 }.multilineTextAlignment(.leading)
                                 Spacer(minLength: 0)
                                 if preset.kind == store.state.selected { Image(systemName: "checkmark").font(.footnote.weight(.semibold)).accessibilityHidden(true) }
@@ -66,7 +78,13 @@ struct TimerScreen: View {
                 }
             }.padding(.horizontal, 24).padding(.top, 28).padding(.bottom, 24).frame(maxWidth: 520).frame(maxWidth: .infinity)
         }
+        .scrollDismissesKeyboard(.interactively)
         .disabled(store.busy)
+        .onAppear(perform: syncTitle)
+        .onChange(of: session.id) { _, _ in syncTitle() }
+        .onChange(of: session.title) { _, _ in if !titleFocused { syncTitle() } }
+        .onChange(of: session.phase) { _, _ in syncTitle() }
+        .onChange(of: titleFocused) { _, focused in if !focused { commitTitle() } }
         .alert("Timer notice", isPresented: Binding(get: { store.notice != nil }, set: { if !$0 { store.notice = nil } })) {
             Button("OK") { store.notice = nil }
         } message: { Text(store.notice ?? "") }
@@ -91,6 +109,26 @@ struct TimerScreen: View {
             .accessibilityLabel("Start \(next.name), \(durationLabel(next.minutes))")
             .transition(.opacity.combined(with: .scale(scale: 0.95)))
     }
+    /// A stopwatch session leads with its optional name, set before Start and editable while it runs.
+    private var nameField: some View {
+        TextField("Name this session", text: $titleDraft)
+            .font(.title3.weight(.semibold)).multilineTextAlignment(.center).focused($titleFocused).submitLabel(.done)
+            .onChange(of: titleDraft) { _, value in if value.count > 60 { titleDraft = String(value.prefix(60)) } }
+            .onSubmit(commitTitle)
+            .frame(maxWidth: 200).accessibilityLabel("Session name")
+    }
+    private var modeButton: some View {
+        Button { titleFocused = false; act(untimed ? "timer" : "stopwatch") } label: {
+            Image(systemName: untimed ? "timer" : "stopwatch").font(.title3.weight(.medium)).frame(width: 48, height: 48).contentShape(Circle())
+        }.buttonStyle(.plain).modifier(GlassSurface(shape: .circle))
+            .accessibilityLabel(untimed ? "Switch to timer" : "Switch to stopwatch")
+    }
+    /// Each new stopwatch session starts unnamed; a finished one keeps its name in history only.
+    private func syncTitle() { titleDraft = session.phase == .ended || session.phase == .completed ? "" : session.title ?? "" }
+    private func commitTitle() {
+        guard session.isActive, TimerState.normalizedTitle(titleDraft) != session.title else { return }
+        act("title", title: titleDraft)
+    }
     /// One large primary action. End and Reset join it as round icon buttons only while a session is active.
     @ViewBuilder private var controls: some View {
         if typeSize.isAccessibilitySize {
@@ -110,7 +148,7 @@ struct TimerScreen: View {
         }
     }
     private var primaryButton: some View {
-        Button { act(primaryAction) } label: {
+        Button { titleFocused = false; act(primaryAction, title: primaryAction == "start" && untimed ? titleDraft : nil) } label: {
             Label(primaryTitle, systemImage: session.phase == .running ? "pause.fill" : "play.fill")
                 .font(.title3.weight(.semibold)).frame(maxWidth: .infinity, minHeight: 64).contentShape(Capsule())
         }.modifier(PrimaryTimerButton(accent: accent))
@@ -123,16 +161,17 @@ struct TimerScreen: View {
             }.font(.title3.weight(.semibold)).foregroundStyle(.primary).contentShape(Capsule())
         }.buttonStyle(.plain).modifier(GlassSurface(shape: labelled ? .capsule : .circle))
             .accessibilityLabel(title)
-            .accessibilityHint(action == "reset" ? "Restores the full duration without saving this session." : "Saves this session to your history.")
+            .accessibilityHint(action == "end" ? "Saves this session to your history." : untimed ? "Clears this stopwatch without saving." : "Restores the full duration without saving this session.")
     }
     private var status: String? {
         switch session.phase {
-        case .ready: nil
+        case .ready: untimed ? "Stopwatch" : nil
+        case .running where untimed: session.startedAt.map { "Started \($0.formatted(date: .omitted, time: .shortened))" }
         case .running: session.end.map { "Ends \($0.formatted(date: .omitted, time: .shortened))" }
         case .paused: "Paused"; case .completed: "Complete"; case .ended: "Ended"
         }
     }
     private var primaryTitle: String { switch session.phase { case .running: "Pause"; case .paused: "Resume"; case .completed, .ended: "Start"; case .ready: "Start" } }
     private var primaryAction: String { switch session.phase { case .running: "pause"; case .paused: "resume"; case .completed, .ended, .ready: "start" } }
-    private func act(_ action: String, kind: SessionKind? = nil) { Task { await store.perform(action, kind: kind) } }
+    private func act(_ action: String, kind: SessionKind? = nil, title: String? = nil) { Task { await store.perform(action, kind: kind, title: title) } }
 }

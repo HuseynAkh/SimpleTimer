@@ -19,7 +19,10 @@ public struct SessionRecord: Codable, Equatable, Identifiable, Sendable {
     public var spans: [RunSpan]
     public var pauses: Int
     public var outcome: SessionOutcome
+    public var title: String?
+    public var untimed: Bool?
     public var elapsed: TimeInterval { spans.reduce(0) { $0 + $1.duration } }
+    public var isUntimed: Bool { untimed == true }
     public var isBreak: Bool { preset.kind == .shortBreak || preset.kind == .longBreak }
     public var isFinished: Bool { outcome != .running && outcome != .paused }
     public func duration(in interval: DateInterval) -> TimeInterval { spans.reduce(0) { $0 + $1.duration(in: interval) } }
@@ -49,9 +52,10 @@ public struct SessionStatistics {
     public var focus: TimeInterval { records.filter { !$0.isBreak }.reduce(0) { $0 + $1.duration(in: interval) } }
     public var rest: TimeInterval { total - focus }
     public var completed: Int { sessions.filter { $0.outcome == .completed }.count }
+    /// Only timed sessions have a target to complete.
     public var completionRate: Double? {
-        let finished = sessions.filter(\.isFinished)
-        return finished.isEmpty ? nil : Double(completed) / Double(finished.count)
+        let finished = sessions.filter { $0.isFinished && !$0.isUntimed }
+        return finished.isEmpty ? nil : Double(finished.filter { $0.outcome == .completed }.count) / Double(finished.count)
     }
     public var averageSession: TimeInterval { sessions.isEmpty ? 0 : total / Double(sessions.count) }
     public var longest: TimeInterval { sessions.map { $0.duration(in: interval) }.max() ?? 0 }

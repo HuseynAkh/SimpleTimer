@@ -57,7 +57,7 @@ struct SimpleTimerLiveActivity: Widget {
     private func heading(_ context: ActivityViewContext<TimerAttributes>) -> some View {
         HStack(spacing: 7) {
             Circle().fill(Palette.color(context.attributes.color)).frame(width: 6, height: 6)
-            Text(context.attributes.name).font(.subheadline.weight(.medium)).lineLimit(1)
+            Text(context.state.title ?? context.attributes.name).font(.subheadline.weight(.medium)).lineLimit(1)
             if context.state.phase == "paused" {
                 Text("· Paused").foregroundStyle(.secondary).font(.caption)
             } else if context.state.phase == "completed" || context.isStale {
@@ -84,7 +84,9 @@ struct SimpleTimerLiveActivity: Widget {
             .accessibilityHint(action == "reset" ? "Restores the full duration without saving this session." : "")
     }
     @ViewBuilder private func progress(_ context: ActivityViewContext<TimerAttributes>) -> some View {
-        if let end = context.state.end, context.state.phase == "running" {
+        if context.state.untimed == true {
+            // A stopwatch has no target to measure progress against.
+        } else if let end = context.state.end, context.state.phase == "running" {
             ProgressView(timerInterval: end.addingTimeInterval(-context.state.duration)...end, countsDown: true)
                 .labelsHidden().tint(Palette.color(context.attributes.color))
         } else {
@@ -93,7 +95,12 @@ struct SimpleTimerLiveActivity: Widget {
         }
     }
     @ViewBuilder private func countdown(_ context: ActivityViewContext<TimerAttributes>) -> some View {
-        if let end = context.state.end, context.state.phase == "running" {
+        if context.state.untimed == true {
+            // The stopwatch's effective start is its 12-hour limit minus the full span, so pauses stay excluded.
+            if let end = context.state.end, context.state.phase == "running" {
+                Text(timerInterval: end.addingTimeInterval(-context.state.duration)...end, countsDown: false, showsHours: true)
+            } else { Text(TimerState.clock(context.state.duration - context.state.remaining, roundsUp: false)).contentTransition(.numericText()) }
+        } else if let end = context.state.end, context.state.phase == "running" {
             Text(timerInterval: end.addingTimeInterval(-context.state.duration)...end, countsDown: true, showsHours: true)
         } else { Text(TimerState.clock(context.state.remaining)).contentTransition(.numericText(countsDown: true)) }
     }

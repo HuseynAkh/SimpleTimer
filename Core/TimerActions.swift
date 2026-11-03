@@ -2,8 +2,13 @@ import Foundation
 
 extension TimerState {
     /// One action path for iPhone, Watch and Live Activity controls.
-    @discardableResult public mutating func perform(_ action: String, kind: SessionKind? = nil, at now: Date) -> Bool {
+    @discardableResult public mutating func perform(_ action: String, kind: SessionKind? = nil, title: String? = nil, at now: Date) -> Bool {
         switch action {
+        case "timer", "stopwatch":
+            return setMode(untimed: action == "stopwatch")
+        case "title":
+            guard session.isActive else { return false }
+            session.title = Self.normalizedTitle(title)
         case "reset", "restart":
             // Keep the old wire action as a reset-only alias during app updates.
             return reset(confirmed: true, at: now)
@@ -16,6 +21,7 @@ extension TimerState {
                 guard reset(confirmed: true, at: now) else { return false }
             }
             guard session.phase == .ready else { return false }
+            if let title { session.title = Self.normalizedTitle(title) }
             start(at: now)
         case "pause": pause(at: now)
         case "resume": resume(at: now)

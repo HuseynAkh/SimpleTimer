@@ -45,11 +45,11 @@ import UserNotifications
 
     /// No suspension between validation, mutation and durable save. Watch replies
     /// can acknowledge this commit without waiting for notifications or ActivityKit.
-    @discardableResult func apply(_ action: String, kind: SessionKind? = nil, publish: Bool = true) -> Bool {
+    @discardableResult func apply(_ action: String, kind: SessionKind? = nil, title: String? = nil, publish: Bool = true) -> Bool {
         guard storageAvailable, !busy else { return false }
         busy = true; defer { busy = false }
         let previous = state, now = Date()
-        guard state.perform(action, kind: kind, at: now) else { state = previous; return false }
+        guard state.perform(action, kind: kind, title: title, at: now) else { state = previous; return false }
         guard save(publish: publish) else { state = previous; return false }
         if action == "start" { activityToCreate = state.session.id }
         if action == "reset" || action == "restart" {
@@ -61,8 +61,8 @@ import UserNotifications
         return true
     }
 
-    func perform(_ action: String, kind: SessionKind? = nil) async {
-        guard apply(action, kind: kind) else { return }
+    func perform(_ action: String, kind: SessionKind? = nil, title: String? = nil) async {
+        guard apply(action, kind: kind, title: title) else { return }
         // Permission UI belongs to an explicit iPhone action, never a Watch reply.
         if action == "start" && !requestingPermission {
             requestingPermission = true
@@ -86,7 +86,8 @@ import UserNotifications
         let s = state.session
         let authorization = await notifications.notificationSettings().authorizationStatus
         guard self.state.session == s else { return }
-        if s.phase == .running, let end = s.end, end > Date(),
+        // A stopwatch has no finish to announce; only timed sessions schedule an alert.
+        if s.phase == .running, !s.isUntimed, let end = s.end, end > Date(),
            authorization == .authorized || authorization == .provisional || authorization == .ephemeral {
             let content = UNMutableNotificationContent(); content.title = "\(s.preset.name) finished"; content.body = "Take a moment. Your next session is up to you."; if state.sound { content.sound = .default }
             let request = UNNotificationRequest(identifier: "completion", content: content, trigger: UNTimeIntervalNotificationTrigger(timeInterval: max(1, end.timeIntervalSinceNow), repeats: false))
@@ -96,7 +97,7 @@ import UserNotifications
                 return
             }
         }
-        let value = TimerAttributes.ContentState(phase: s.phase.rawValue, end: s.end, remaining: s.remaining, duration: s.duration)
+        let value = TimerAttributes.ContentState(phase: s.phase.rawValue, end: s.end, remaining: s.remaining, duration: s.duration, untimed: s.untimed, title: s.title)
         let content = ActivityContent(state: value, staleDate: s.end)
         var found = false
         for activity in Activity<TimerAttributes>.activities {
@@ -107,7 +108,7 @@ import UserNotifications
             }
         }
         if create && !found && s.isActive && ActivityAuthorizationInfo().areActivitiesEnabled {
-            do { _ = try Activity.request(attributes: TimerAttributes(sessionID: s.id, name: s.preset.name, symbol: s.preset.kind.symbol, color: s.preset.color), content: content, pushType: nil) }
+            do { _ = try Activity.request(attributes: TimerAttributes(sessionID: s.id, name: s.preset.name, symbol: s.isUntimed ? "stopwatch" : s.preset.kind.symbol, color: s.preset.color), content: content, pushType: nil) }
             catch { notice = "Live Activity unavailable. Your timer and completion alert are independent of it." }
         }
     }

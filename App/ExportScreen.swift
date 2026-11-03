@@ -92,8 +92,8 @@ private struct ReportPreview: View {
                 Section("Sessions in this report") {
                     ForEach(report.records) { record in
                         VStack(alignment: .leading, spacing: 6) {
-                            Text(report.includeNames ? record.preset.name : record.isBreak ? "Break" : "Focus").font(.headline)
-                            Text("\(activityDuration(record.elapsed)) of \(activityDuration(record.planned)) · \(record.pauses) pauses · \(record.outcome.rawValue)").font(.subheadline)
+                            Text(report.includeNames ? record.title.map { "\(record.preset.name): \($0)" } ?? record.preset.name : record.isBreak ? "Break" : "Focus").font(.headline)
+                            Text(record.isUntimed ? "\(activityDuration(record.elapsed)) stopwatch · \(record.pauses) pauses" : "\(activityDuration(record.elapsed)) of \(activityDuration(record.planned)) · \(record.pauses) pauses · \(record.outcome.rawValue)").font(.subheadline)
                             Text("Started \(record.startedAt.formatted(.iso8601))\nFinished \(record.finishedAt.formatted(.iso8601))").font(.caption).foregroundStyle(.secondary).textSelection(.enabled)
                         }.padding(.vertical, 4)
                     }

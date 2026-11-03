@@ -45,12 +45,12 @@ import WatchConnectivity
         }
     }
 
-    func perform(_ action: String, kind: SessionKind? = nil) {
+    func perform(_ action: String, kind: SessionKind? = nil, title: String? = nil) {
         guard connected else { message = "Connect to your iPhone to change the timer."; return }
         message = nil
         let command: WatchCommand?
         if action == "select", let kind { command = sync.select(kind, at: Date()) }
-        else { command = sync.begin(action, at: Date()) }
+        else { command = sync.begin(action, title: title, at: Date()) }
         if let command { send(command) }
         else if action != "select" && busy { message = "Updating your session…" }
     }

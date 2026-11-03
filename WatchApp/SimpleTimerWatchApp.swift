@@ -14,6 +14,7 @@ struct WatchTimerScreen: View {
     @EnvironmentObject private var store: WatchStore
     @Environment(\.legibilityWeight) private var legibility
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var name = ""
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -22,17 +23,24 @@ struct WatchTimerScreen: View {
                         Text(message).font(.caption).foregroundStyle(.secondary).multilineTextAlignment(.center)
                     }
                     if let session = store.displayedSession {
-                        Text(session.preset.name).font(.headline).foregroundStyle(.secondary)
+                        Text(session.title ?? session.preset.name).font(.headline).foregroundStyle(.secondary).lineLimit(1)
                         TimelineView(.periodic(from: .now, by: 1)) { context in
-                            Text(TimerState.clock(session.remaining(at: context.date)))
+                            let shown = session.isUntimed ? TimerState.clock(session.elapsed(at: context.date), roundsUp: false) : TimerState.clock(session.remaining(at: context.date))
+                            Text(shown)
                                 // Light SF Pro digits match the iPhone timer and Live Activity.
                                 .font(.system(.largeTitle).weight(legibility == .bold ? .medium : .light).monospacedDigit()).minimumScaleFactor(0.6).lineLimit(1)
-                                .contentTransition(.numericText(countsDown: true)).animation(reduceMotion ? nil : .snappy, value: TimerState.clock(session.remaining(at: context.date)))
-                                .accessibilityLabel("Time remaining")
+                                .contentTransition(.numericText(countsDown: !session.isUntimed)).animation(reduceMotion ? nil : .snappy, value: shown)
+                                .accessibilityLabel(session.isUntimed ? "Time elapsed" : "Time remaining")
                         }
                         if session.phase == .paused { Text("Paused").font(.caption) }
+                        // The name is optional and only set before a stopwatch starts; the iPhone can rename it later.
+                        if session.isUntimed && !session.isActive {
+                            TextField("Name", text: $name).accessibilityLabel("Session name")
+                        }
                         Button {
-                            store.perform(session.phase == .running ? "pause" : session.phase == .paused ? "resume" : "start")
+                            let action = session.phase == .running ? "pause" : session.phase == .paused ? "resume" : "start"
+                            store.perform(action, title: action == "start" && session.isUntimed ? name : nil)
+                            if action == "start" { name = "" }
                         } label: {
                             Label(session.phase == .running ? "Pause" : session.phase == .paused ? "Resume" : "Start", systemImage: session.phase == .running ? "pause.fill" : "play.fill")
                                 .frame(maxWidth: .infinity, minHeight: 44)
@@ -48,13 +56,13 @@ struct WatchTimerScreen: View {
                                     Text("Reset").frame(maxWidth: .infinity, minHeight: 44)
                                 }.buttonStyle(.plain)
                                     .background(.white.opacity(0.15), in: Capsule())
-                                    .accessibilityHint("Restores the full duration without saving this session.")
+                                    .accessibilityHint(session.isUntimed ? "Clears this stopwatch without saving." : "Restores the full duration without saving this session.")
                             }
                         }
                         NavigationLink("Sessions") {
                             WatchSessionsScreen()
                         }
-                        Text("iPhone timer").font(.caption2).foregroundStyle(.secondary)
+                        Text(session.isUntimed ? "iPhone stopwatch" : "iPhone timer").font(.caption2).foregroundStyle(.secondary)
                     } else {
                         Image(systemName: "iphone.and.arrow.forward").font(.largeTitle)
                         Text("Open SimpleTimer on iPhone").multilineTextAlignment(.center)
@@ -62,7 +70,16 @@ struct WatchTimerScreen: View {
                     if store.busy { ProgressView().accessibilityLabel("Updating timer") }
                 }.padding(.horizontal, 6)
             }
-            .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { store.refresh(manual: true) } label: { Image(systemName: "arrow.clockwise") }.accessibilityLabel("Refresh from iPhone").disabled(store.refreshing) } }
+            .toolbar {
+                // Mode changes only between sessions, matching the iPhone.
+                if let session = store.displayedSession, !session.isActive {
+                    ToolbarItem(placement: .topBarLeading) {
+                        Button { store.perform(session.isUntimed ? "timer" : "stopwatch") } label: { Image(systemName: session.isUntimed ? "timer" : "stopwatch") }
+                            .accessibilityLabel(session.isUntimed ? "Switch to timer" : "Switch to stopwatch")
+                    }
+                }
+                ToolbarItem(placement: .topBarTrailing) { Button { store.refresh(manual: true) } label: { Image(systemName: "arrow.clockwise") }.accessibilityLabel("Refresh from iPhone").disabled(store.refreshing) }
+            }
         }
     }
 }
@@ -75,7 +92,7 @@ private struct WatchSessionsScreen: View {
 
     var body: some View {
         List(store.snapshot?.presets ?? [], id: \.kind) { preset in
-            WatchSessionRow(preset: preset, selected: preset.kind == store.displayedSession?.preset.kind) {
+            WatchSessionRow(preset: preset, selected: preset.kind == store.displayedSession?.preset.kind, untimed: store.displayedSession?.isUntimed == true) {
                 if store.displayedSession?.isActive == true { switching = preset } else { store.perform("select", kind: preset.kind) }
             }
         }
@@ -95,6 +112,7 @@ private struct WatchSessionsScreen: View {
 private struct WatchSessionRow: View {
     let preset: Preset
     let selected: Bool
+    let untimed: Bool
     let select: () -> Void
     @Environment(\.colorSchemeContrast) private var contrast
 
@@ -106,7 +124,7 @@ private struct WatchSessionRow: View {
             HStack(spacing: 8) {
                 VStack(alignment: .leading, spacing: 3) {
                     Text(preset.name).font(.body.weight(selected ? .semibold : .regular))
-                    Text(durationLabel(preset.minutes)).font(.caption).foregroundStyle(.white.opacity(0.85))
+                    if !untimed { Text(durationLabel(preset.minutes)).font(.caption).foregroundStyle(.white.opacity(0.85)) }
                 }
                 Spacer(minLength: 0)
                 if selected {
@@ -128,7 +146,7 @@ private struct WatchSessionRow: View {
                         .strokeBorder(selected ? (contrast == .increased ? .white : Palette.color(preset.color)) : .clear, lineWidth: contrast == .increased ? 2 : 1.5)
                 }
         )
-        .accessibilityLabel("\(preset.name), \(durationLabel(preset.minutes))")
+        .accessibilityLabel(untimed ? preset.name : "\(preset.name), \(durationLabel(preset.minutes))")
         .accessibilityAddTraits(selected ? .isSelected : [])
     }
 }

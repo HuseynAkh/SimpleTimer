@@ -7,6 +7,9 @@ struct TimerAttributes: ActivityAttributes {
         var end: Date?
         var remaining: Double
         var duration: Double
+        // Optional so an activity started by an older build still decodes.
+        var untimed: Bool?
+        var title: String?
     }
     var sessionID: UUID
     var name: String

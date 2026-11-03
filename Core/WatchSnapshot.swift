@@ -25,8 +25,9 @@ public struct WatchCommand: Codable, Sendable {
     public let action: String
     public let sessionID: UUID
     public let kind: SessionKind?
-    public init(action: String, sessionID: UUID, kind: SessionKind? = nil, id: UUID = UUID(), expiresAt: Date? = nil) {
-        self.action = action; self.sessionID = sessionID; self.kind = kind; self.id = id; self.expiresAt = expiresAt
+    public let title: String?
+    public init(action: String, sessionID: UUID, kind: SessionKind? = nil, title: String? = nil, id: UUID = UUID(), expiresAt: Date? = nil) {
+        self.action = action; self.sessionID = sessionID; self.kind = kind; self.title = title; self.id = id; self.expiresAt = expiresAt
     }
     public func isValid(for state: TimerState, at now: Date = Date()) -> Bool {
         if let expiresAt, expiresAt <= now { return false }
@@ -38,6 +39,8 @@ public struct WatchCommand: Codable, Sendable {
         case "resume": return state.session.phase == .paused
         case "end": return state.session.isActive
         case "select": return kind != nil && state.presets.contains { $0.kind == kind }
+        case "timer", "stopwatch": return !state.session.isActive
+        case "title": return state.session.isActive
         default: return false
         }
     }

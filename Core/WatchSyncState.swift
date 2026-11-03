@@ -12,7 +12,7 @@ public struct WatchSyncState: Sendable {
         guard let snapshot else { return nil }
         if let kind = desiredSelection, kind != snapshot.session.preset.kind,
            let preset = snapshot.presets.first(where: { $0.kind == kind }) {
-            return Session(preset: preset)
+            return Session(preset: preset, untimed: snapshot.session.isUntimed)
         }
         return snapshot.session
     }
@@ -33,9 +33,9 @@ public struct WatchSyncState: Sendable {
         return command
     }
 
-    public mutating func begin(_ action: String, at now: Date) -> WatchCommand? {
+    public mutating func begin(_ action: String, title: String? = nil, at now: Date) -> WatchCommand? {
         guard pending == nil, desiredSelection == nil, let snapshot else { return nil }
-        let command = WatchCommand(action: action, sessionID: snapshot.session.id, expiresAt: now.addingTimeInterval(8))
+        let command = WatchCommand(action: action, sessionID: snapshot.session.id, title: title, expiresAt: now.addingTimeInterval(8))
         pending = command
         return command
     }

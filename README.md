@@ -16,6 +16,7 @@ Pick a session. Start when you're ready. Nothing starts automatically.
 - One large Start and Pause button. End and Reset sit beside it while a session runs. Reset stops the timer, restores its full duration and discards the current attempt. Saved history stays intact.
 - Switching sessions mid-timer asks first, so a stray tap never ends your focus.
 - When a session completes, one tap starts a suggested break, or your last focus session after a break. Nothing starts on its own.
+- Stopwatch mode for untimed sessions. Tap the stopwatch in the corner, pick a session type, add an optional name and start. It counts up, works from the Watch and Lock Screen, and stops itself after 12 hours.
 - Pause, resume, end or reset from the app or a Live Activity. Optionally keep the screen on while a timer runs.
 - Activity charts and searchable history. Paused time doesn't count.
 - A report you can attach to ChatGPT, Claude or another AI app.

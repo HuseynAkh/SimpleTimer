@@ -38,6 +38,7 @@ After editing `project.yml`, run `xcodegen generate` with `Config/Local.xcconfig
 - `TimerStore.apply` validates, mutates and saves in one main-actor turn with no suspension. Notifications and ActivityKit run afterwards through `LatestEffectsQueue`. Acknowledgements never wait for them.
 - Watch commands carry an expected session UUID, a command ID and an expiry. Never queue, replay or auto-retry a timer command. The Watch persists only confirmed phone state and keeps no history.
 - Reset discards the current attempt without archiving it. End saves elapsed time. Only an explicit Start begins an attempt.
+- A stopwatch is an untimed `Session` with a 12-hour limit that reuses every timer action. Mode switches only between sessions. New fields stay optional so older saves, backups and companions still decode.
 - Saved state and backup JSON must stay readable by older and newer builds. Import is additive and never touches preferences or the active timer.
 - No backend, analytics, third-party SDK or network calls. Export goes only through the share sheet.
 

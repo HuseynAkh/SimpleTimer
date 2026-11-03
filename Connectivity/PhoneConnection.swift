@@ -52,7 +52,7 @@ import WatchConnectivity
                         // Repeated delivery acknowledges the original command, never applies it twice.
                     } else if !command.isValid(for: store.state) {
                         error = "The iPhone timer changed. Your Watch is up to date now."
-                    } else if store.apply(command.action, kind: command.kind, publish: false) {
+                    } else if store.apply(command.action, kind: command.kind, title: command.title, publish: false) {
                         self.lastAcknowledgedCommand = command.id
                     } else { error = "The timer could not be saved on iPhone." }
                 } else { error = "Update SimpleTimer on both devices to reconnect." }
