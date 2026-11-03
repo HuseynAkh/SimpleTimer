@@ -7,6 +7,7 @@ SimpleTimer is a public, MIT-licensed iPhone time tracker with a Live Activity a
 - [README.md](README.md): features, build and install.
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): timer, history, export and Watch sync design.
 - [docs/VALIDATION.md](docs/VALIDATION.md): what has been tested, and what hasn't.
+- [docs/TESTING.md](docs/TESTING.md): every test suite and its named checks.
 - [PRIVACY.md](PRIVACY.md): data handling and publishing setup.
 - [docs/GALLERY.md](docs/GALLERY.md): how release screenshots are made.
 
@@ -16,6 +17,7 @@ SimpleTimer is a public, MIT-licensed iPhone time tracker with a Live Activity a
 - `App`: SwiftUI iPhone screens. `TimerStore` owns state, saving and system effects.
 - `LiveActivity`, `Shared`: widget extension and types shared with it.
 - `Connectivity`, `WatchApp`: WatchConnectivity on the phone, and the Watch app.
+- `Mac`: the menu bar app, tested end to end by `Tests/MacE2E`.
 - `project.yml`: XcodeGen spec. `SimpleTimer.xcodeproj` is generated from it and committed.
 - `scripts`: test, build, install and publishing-audit scripts.
 
@@ -24,6 +26,7 @@ SimpleTimer is a public, MIT-licensed iPhone time tracker with a Live Activity a
 ```sh
 ./scripts/test-core.sh          # swift test for Core
 ./scripts/build-simulator.sh    # iPhone + Live Activity + embedded Watch app, unsigned
+./scripts/test-mac-e2e.sh       # Mac menu bar app end to end; adds a second menu bar item while it runs
 python3 scripts/audit-public.py --identity --staged   # what the pre-commit hook runs
 python3 scripts/test-public-guard.py                   # tests for the audit itself
 ```

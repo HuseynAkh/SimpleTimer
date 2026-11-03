@@ -75,7 +75,7 @@ It works with menu bar managers such as Ice, Thaw and Bartender. If its icon is 
 open DerivedData/Build/Products/Debug/SimpleTimer.app
 ```
 
-To keep it, build the `SimpleTimerMac` scheme in Xcode with your team in `Config/Local.xcconfig`, then move `SimpleTimer.app` to Applications.
+To keep it, build the `SimpleTimerMac` scheme in Xcode with your team in `Config/Local.xcconfig`, then move `SimpleTimer.app` to Applications. `./scripts/test-mac-e2e.sh` runs its end-to-end checks; [the test suite](docs/TESTING.md) lists them.
 
 ## How it's built
 
