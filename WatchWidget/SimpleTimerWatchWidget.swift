@@ -1,8 +1,8 @@
 import WidgetKit
 import SwiftUI
 
-/// A launcher for watch faces and the Smart Stack. It shows no timer state, so it needs no shared
-/// container; a tap opens SimpleTimer ready to start.
+/// A launcher for watch faces and the Smart Stack: the timer and stopwatch symbols, no text. It shows
+/// no timer state, so it needs no shared container; a tap opens SimpleTimer ready to start.
 @main struct SimpleTimerWatchWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: "SimpleTimerLauncher", provider: LauncherProvider()) { _ in LauncherView() }
@@ -27,26 +27,26 @@ struct LauncherView: View {
     var body: some View {
         content.containerBackground(.fill.tertiary, for: .widget).accessibilityLabel("Open SimpleTimer")
     }
+    /// Symbols only, as large as each slot allows; the face already shows which app it opens.
     @ViewBuilder private var content: some View {
         switch family {
         case .accessoryCircular:
             ZStack {
                 AccessoryWidgetBackground()
-                Image(systemName: "timer").font(.title2.weight(.medium)).widgetAccentable()
+                glyph("timer").padding(9)
             }
         case .accessoryCorner:
-            Image(systemName: "timer").font(.title2.weight(.medium)).widgetAccentable().widgetLabel("SimpleTimer")
+            glyph("timer").padding(2)
         case .accessoryInline:
-            Label("SimpleTimer", systemImage: "timer")
+            Image(systemName: "timer")
         default:
-            HStack(spacing: 10) {
-                Image(systemName: "timer").font(.title2.weight(.medium)).widgetAccentable()
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("SimpleTimer").font(.headline)
-                    Text("Open timer").font(.caption).foregroundStyle(.secondary)
-                }
-                Spacer(minLength: 0)
-            }
+            HStack(spacing: 18) {
+                glyph("timer")
+                glyph("stopwatch")
+            }.padding(.vertical, 4).frame(maxWidth: .infinity)
         }
+    }
+    private func glyph(_ name: String) -> some View {
+        Image(systemName: name).resizable().scaledToFit().fontWeight(.medium).widgetAccentable()
     }
 }
