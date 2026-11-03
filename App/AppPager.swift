@@ -13,6 +13,7 @@ struct AppPager: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.accessibilityReduceTransparency) private var opaque
     @Environment(\.colorSchemeContrast) private var contrast
+    @ScaledMetric private var controlsHeight = 72.0
     var body: some View {
         GeometryReader { geometry in
             ScrollView(.horizontal) {
@@ -24,7 +25,10 @@ struct AppPager: View {
                             case .timer: TimerScreen()
                             case .settings: SettingsScreen()
                             }
-                        }.frame(width: geometry.size.width, height: geometry.size.height)
+                        }
+                            // Pages run behind the floating dots; this keeps their last rows scrollable above them.
+                            .contentMargins(.bottom, controlsHeight, for: .scrollContent)
+                            .frame(width: geometry.size.width, height: geometry.size.height)
                             .clipped()
                             .accessibilityHidden(currentPage != item)
                             .id(item)
@@ -36,9 +40,7 @@ struct AppPager: View {
             .defaultScrollAnchor(.center)
             .scrollIndicators(.hidden)
         }.clipped()
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            pageControls.padding(.bottom, 8).padding(.top, 4)
-        }
+        .overlay(alignment: .bottom) { pageControls.padding(.bottom, 8) }
         .background {
             if currentPage == .timer { DashboardBackground(accent: Palette.color(store.state.session.preset.color)) }
             else { AppBackground() }

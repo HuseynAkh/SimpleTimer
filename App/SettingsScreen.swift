@@ -82,7 +82,7 @@ struct SessionEditor: View {
                                 .accessibilityLabel("\(value) minutes")
                         }
                     }
-                }
+                }.contentMargins(.bottom, 0, for: .scrollContent)
             } header: { Text("Duration") } footer: { Text("1 to 240 minutes.") }
             Section("Colour") { ColorSwatches(selection: $color, label: name.isEmpty ? "Session" : name) }
             if preset?.kind.isCustom == true {
