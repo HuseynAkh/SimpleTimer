@@ -28,6 +28,8 @@ Sync uses one message type, `SyncEnvelope`, in both directions. The Watch sends 
 
 `TimerState.merge` converges the two copies. History is a union by session ID, so a session completed or ended on both devices is saved once. The phone owns the presets. The newest change to the current session wins, with ties going to the phone. A session that either device has saved, or that the other deliberately discarded with Reset or a type change (`replacedIDs`), never becomes active again. If the other device's newer session wins while this device was still running a different one, that run is saved as switched instead of being lost. The Watch keeps finished sessions in a small outbox until the phone lists them in `finishedIDs`. The phone still runs notifications and Live Activities whenever it receives a change; older Watch builds keep working through the previous `WatchSnapshot`/`WatchCommand` messages while both apps update.
 
+The Watch widget (`WatchWidget`) is a static WidgetKit launcher for the accessory families. It shows no timer state, so it needs no App Group or shared container.
+
 System delivery timing still depends on watchOS and iOS, and simulators do not establish physical Bluetooth or Wi-Fi latency.
 
 ## Signing and publishing

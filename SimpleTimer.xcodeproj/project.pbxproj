@@ -33,6 +33,7 @@
 		A57E948E1B4809066A15950F /* Appearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8235D2C249FEB7F410F13FC9 /* Appearance.swift */; };
 		A59DC7C56ECF2FFF82100D2A /* SessionHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 672737E98CD639063BAE8F8D /* SessionHistory.swift */; };
 		AAB33B10CFFD60DB4F66138D /* TimerIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 338E13EC0B1BD46611F5C97C /* TimerIntent.swift */; };
+		AC67CCD75263B1E4823742FF /* SimpleTimerWatchWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE4B88C4E643BCA0CC3A9E78 /* SimpleTimerWatchWidget.swift */; };
 		AEB8535CC21EFCEB2FA3FB1D /* TimerSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = 595E0F9F5C6F23D4D0AF892E /* TimerSync.swift */; };
 		B4C6249F22549EC7D030654D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D60EE1B39674E4821994AB87 /* Assets.xcassets */; };
 		B8D3545B1B12F0FA0287564F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BC88056C6AF59F2E5B5847C6 /* Assets.xcassets */; };
@@ -50,6 +51,7 @@
 		E5506B3406FD10E06F2227A3 /* Palette.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29B418097650D598C526AE34 /* Palette.swift */; };
 		E6A56C51072D93019D9F21A3 /* ExportScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8AB56127566C743EC6C2AD3 /* ExportScreen.swift */; };
 		EB8E7A80001F8AB7130989E5 /* SimpleTimerActivity.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = A7B0AD5DDFDBE657297A5383 /* SimpleTimerActivity.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		EEDD14AE8039393FA1A54800 /* SimpleTimerWatchWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = AC6F8B5C87CFC8F986271F61 /* SimpleTimerWatchWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		F68104C3038D68DD289A81FA /* HistoryExport.swift in Sources */ = {isa = PBXBuildFile; fileRef = C90877B3B17F6B8CB6964BD7 /* HistoryExport.swift */; };
 /* End PBXBuildFile section */
 
@@ -60,6 +62,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = 69F5971BB72108C04B57A0A6;
 			remoteInfo = SimpleTimerWatch;
+		};
+		81196B2B05CF256F4EBB9C0F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1796F758820ECC507D91C41F /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = CA104BD7C83E7565A7BE98E6;
+			remoteInfo = SimpleTimerWatchWidget;
 		};
 		A96503AF36B8C7362712D699 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -82,6 +91,17 @@
 			name = "Embed Watch Content";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		55C770134895FAF1B217683C /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				EEDD14AE8039393FA1A54800 /* SimpleTimerWatchWidget.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		BED52F7ADB45DA9BCEBAE678 /* Embed Foundation Extensions */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -96,6 +116,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		0327F04D28D75FB3806A0816 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		1623AB66379D9CA9161AE71A /* AppPager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppPager.swift; sourceTree = "<group>"; };
 		18737D70AE6EB4F443E0478A /* TimerAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerAttributes.swift; sourceTree = "<group>"; };
 		1CD1450BBB97C7F08BFBE2BC /* TimerActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerActions.swift; sourceTree = "<group>"; };
@@ -116,9 +137,11 @@
 		98AB667239DE3C11C7312239 /* SimpleTimerWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleTimerWatchApp.swift; sourceTree = "<group>"; };
 		A0174F799EF07BFD5A12C1C6 /* ActivityScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityScreen.swift; sourceTree = "<group>"; };
 		A7B0AD5DDFDBE657297A5383 /* SimpleTimerActivity.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = SimpleTimerActivity.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		AC6F8B5C87CFC8F986271F61 /* SimpleTimerWatchWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SimpleTimerWatchWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		AE6B8724DAE1B41EE49F96D6 /* SimpleTimerActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleTimerActivity.swift; sourceTree = "<group>"; };
 		BC88056C6AF59F2E5B5847C6 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C90877B3B17F6B8CB6964BD7 /* HistoryExport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryExport.swift; sourceTree = "<group>"; };
+		CE4B88C4E643BCA0CC3A9E78 /* SimpleTimerWatchWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleTimerWatchWidget.swift; sourceTree = "<group>"; };
 		D5F41E2AA25A25A937EB568C /* PhoneConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneConnection.swift; sourceTree = "<group>"; };
 		D60EE1B39674E4821994AB87 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		D7B5DF07F5FA722EC839DD58 /* SimpleTimer.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = SimpleTimer.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -157,6 +180,7 @@
 				37F9B1C02295456663921B52 /* LiveActivity */,
 				1376F38C8089ED1300D90B2E /* Shared */,
 				79D1EAFA86703AFDB2EC0A3E /* WatchApp */,
+				EF91A0B75846F87B91B78C90 /* WatchWidget */,
 				ED46ED04A93B59FB3E74A690 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -211,6 +235,7 @@
 				D7B5DF07F5FA722EC839DD58 /* SimpleTimer.app */,
 				A7B0AD5DDFDBE657297A5383 /* SimpleTimerActivity.appex */,
 				F1770AD197ABD879047B2414 /* SimpleTimerWatch.app */,
+				AC6F8B5C87CFC8F986271F61 /* SimpleTimerWatchWidget.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -229,6 +254,15 @@
 			path = Core;
 			sourceTree = "<group>";
 		};
+		EF91A0B75846F87B91B78C90 /* WatchWidget */ = {
+			isa = PBXGroup;
+			children = (
+				0327F04D28D75FB3806A0816 /* Info.plist */,
+				CE4B88C4E643BCA0CC3A9E78 /* SimpleTimerWatchWidget.swift */,
+			);
+			path = WatchWidget;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -238,10 +272,12 @@
 			buildPhases = (
 				B6D260A6EB8CF6A0377D94DF /* Sources */,
 				27E441F3AF351589F6E5E306 /* Resources */,
+				55C770134895FAF1B217683C /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				EDD259EB5B8AA050588CE757 /* PBXTargetDependency */,
 			);
 			name = SimpleTimerWatch;
 			packageProductDependencies = (
@@ -289,6 +325,23 @@
 			productReference = D7B5DF07F5FA722EC839DD58 /* SimpleTimer.app */;
 			productType = "com.apple.product-type.application";
 		};
+		CA104BD7C83E7565A7BE98E6 /* SimpleTimerWatchWidget */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6C22C837BF68B78DD3E11F14 /* Build configuration list for PBXNativeTarget "SimpleTimerWatchWidget" */;
+			buildPhases = (
+				B65B2A0BEF5E5CAA1F763DF5 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = SimpleTimerWatchWidget;
+			packageProductDependencies = (
+			);
+			productName = SimpleTimerWatchWidget;
+			productReference = AC6F8B5C87CFC8F986271F61 /* SimpleTimerWatchWidget.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -307,6 +360,10 @@
 						ProvisioningStyle = Automatic;
 					};
 					76FB540336FA83FA1D80C06F = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+					CA104BD7C83E7565A7BE98E6 = {
 						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
 					};
@@ -329,6 +386,7 @@
 				76FB540336FA83FA1D80C06F /* SimpleTimer */,
 				769FBE98BC12DD161D0B9ABC /* SimpleTimerActivity */,
 				69F5971BB72108C04B57A0A6 /* SimpleTimerWatch */,
+				CA104BD7C83E7565A7BE98E6 /* SimpleTimerWatchWidget */,
 			);
 		};
 /* End PBXProject section */
@@ -397,6 +455,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		B65B2A0BEF5E5CAA1F763DF5 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AC67CCD75263B1E4823742FF /* SimpleTimerWatchWidget.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		B6D260A6EB8CF6A0377D94DF /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -426,6 +492,11 @@
 			isa = PBXTargetDependency;
 			target = 69F5971BB72108C04B57A0A6 /* SimpleTimerWatch */;
 			targetProxy = 56F08BF2B1F6DBE83CF346CA /* PBXContainerItemProxy */;
+		};
+		EDD259EB5B8AA050588CE757 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = CA104BD7C83E7565A7BE98E6 /* SimpleTimerWatchWidget */;
+			targetProxy = 81196B2B05CF256F4EBB9C0F /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -629,6 +700,44 @@
 			};
 			name = Release;
 		};
+		A79B63A56F43CF5F99BC930C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				INFOPLIST_FILE = WatchWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = SimpleTimer;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "$(SIMPLETIMER_BUNDLE_ID).watchkitapp.widget";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Debug;
+		};
+		D951F8445C1FC2FCD1A87C49 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				INFOPLIST_FILE = WatchWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = SimpleTimer;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "$(SIMPLETIMER_BUNDLE_ID).watchkitapp.widget";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Release;
+		};
 		EEA7F6E1E811CD9871B92C8E /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -671,6 +780,15 @@
 			buildConfigurations = (
 				85A7F8651086B3B66B2C27C6 /* Debug */,
 				A6F7E17AC701DABB328BAC46 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		6C22C837BF68B78DD3E11F14 /* Build configuration list for PBXNativeTarget "SimpleTimerWatchWidget" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A79B63A56F43CF5F99BC930C /* Debug */,
+				D951F8445C1FC2FCD1A87C49 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

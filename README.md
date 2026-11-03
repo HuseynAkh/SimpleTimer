@@ -58,6 +58,8 @@ The Watch runs the timer itself and syncs with your iPhone. Start, pause, resume
 
 Sessions use the same colours as iPhone. A checkmark marks your current choice without dimming its name or duration.
 
+Add the SimpleTimer widget to a watch face or the Smart Stack for one-tap access. It opens the app ready to start; it does not pick a session.
+
 Build the `SimpleTimerWatch` scheme for a paired watch simulator or device. The watch app is also embedded in the iPhone build. See [validation](docs/VALIDATION.md) for tested behaviour and limits.
 
 ## How it's built
