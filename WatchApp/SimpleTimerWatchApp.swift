@@ -12,6 +12,8 @@ import SwiftUI
 }
 struct WatchTimerScreen: View {
     @EnvironmentObject private var store: WatchStore
+    @Environment(\.legibilityWeight) private var legibility
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -23,7 +25,9 @@ struct WatchTimerScreen: View {
                         Text(session.preset.name).font(.headline).foregroundStyle(.secondary)
                         TimelineView(.periodic(from: .now, by: 1)) { context in
                             Text(TimerState.clock(session.remaining(at: context.date)))
-                                .font(.system(.largeTitle, design: .rounded).monospacedDigit()).minimumScaleFactor(0.6).lineLimit(1)
+                                // Light SF Pro digits match the iPhone timer and Live Activity.
+                                .font(.system(.largeTitle).weight(legibility == .bold ? .medium : .light).monospacedDigit()).minimumScaleFactor(0.6).lineLimit(1)
+                                .contentTransition(.numericText(countsDown: true)).animation(reduceMotion ? nil : .snappy, value: TimerState.clock(session.remaining(at: context.date)))
                                 .accessibilityLabel("Time remaining")
                         }
                         if session.phase == .paused { Text("Paused").font(.caption) }

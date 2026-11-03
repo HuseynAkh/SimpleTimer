@@ -30,7 +30,8 @@ private struct StatisticsView: View {
     let now: Date
     @Environment(\.dynamicTypeSize) private var typeSize
     @Environment(\.colorSchemeContrast) private var contrast
-    @ScaledMetric(relativeTo: .largeTitle) private var totalSize = 38.0
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @ScaledMetric(relativeTo: .largeTitle) private var totalSize = 40.0
     @State private var period: ReportPeriod = .week
     @State private var anchor = Date()
     @State private var selectedDate: Date?
@@ -108,7 +109,8 @@ private struct StatisticsView: View {
                                 .font(.subheadline).frame(minHeight: 44).contentShape(Rectangle())
                         }
                     }
-                    Text(activityDuration(shown.total)).font(.system(size: totalSize, weight: .medium)).monospacedDigit().minimumScaleFactor(0.6).lineLimit(1)
+                    Text(activityDuration(shown.total)).font(.system(size: totalSize, weight: .medium, design: .serif)).monospacedDigit().minimumScaleFactor(0.6).lineLimit(1)
+                        .contentTransition(.numericText()).animation(reduceMotion ? nil : .snappy, value: shown.total)
                     if selectedBucket == nil {
                         Text(comparisonLabel).font(.subheadline).foregroundStyle(.secondary)
                     } else {
@@ -226,7 +228,8 @@ private struct StatisticsView: View {
     }
     private func duration(for preset: Preset) -> Double { shown.sessions.filter { $0.preset.kind == preset.kind }.reduce(0) { $0 + $1.duration(in: shownInterval) } }
     private func metric(_ title: String, value: String) -> some View {
-        VStack(alignment: .leading, spacing: 7) { Text(title).font(.subheadline).foregroundStyle(.secondary).lineLimit(1); Text(value).font(.title3.weight(.semibold)).monospacedDigit().lineLimit(1).minimumScaleFactor(0.8) }
+        VStack(alignment: .leading, spacing: 7) { Text(title).font(.subheadline).foregroundStyle(.secondary).lineLimit(1); Text(value).font(.title3.weight(.semibold)).monospacedDigit().lineLimit(1).minimumScaleFactor(0.8)
+                .contentTransition(.numericText()).animation(reduceMotion ? nil : .snappy, value: value) }
             .frame(maxWidth: .infinity, alignment: .leading).padding(14).modifier(ContentSurface()).accessibilityElement(children: .combine)
     }
     private func move(_ offset: Int) { anchor = calendar.date(byAdding: period.component, value: offset, to: anchor)!; selectedDate = nil }
@@ -305,7 +308,7 @@ private struct SessionDetail: View {
             VStack(alignment: .leading, spacing: 20) {
                 VStack(alignment: .leading, spacing: 8) {
                     Text(record.preset.name).font(.title2.weight(.medium))
-                    Text(activityDuration(record.elapsed)).font(.system(size: detailSize, weight: .medium)).monospacedDigit()
+                    Text(activityDuration(record.elapsed)).font(.system(size: detailSize, weight: .medium, design: .serif)).monospacedDigit()
                     Text(record.outcome.label).font(.subheadline).foregroundStyle(.secondary)
                 }.frame(maxWidth: .infinity, alignment: .leading).activityCard()
                 VStack(spacing: 18) {

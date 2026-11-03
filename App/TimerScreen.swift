@@ -23,6 +23,7 @@ struct TimerScreen: View {
                         VStack(spacing: 12) {
                             Text(TimerState.clock(remaining))
                                 .font(.system(size: clockSize, weight: legibility == .bold || contrast == .increased ? .medium : .light)).monospacedDigit().minimumScaleFactor(0.45).lineLimit(1)
+                                .contentTransition(.numericText(countsDown: true)).animation(reduceMotion ? nil : .snappy, value: TimerState.clock(remaining))
                                 .accessibilityLabel("Time remaining").accessibilityValue(TimerState.clock(remaining))
                             if let status { Text(status).font(.subheadline).foregroundStyle(.secondary) }
                         }.padding(22)

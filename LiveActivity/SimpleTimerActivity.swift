@@ -95,7 +95,7 @@ struct SimpleTimerLiveActivity: Widget {
     @ViewBuilder private func countdown(_ context: ActivityViewContext<TimerAttributes>) -> some View {
         if let end = context.state.end, context.state.phase == "running" {
             Text(timerInterval: end.addingTimeInterval(-context.state.duration)...end, countsDown: true, showsHours: true)
-        } else { Text(TimerState.clock(context.state.remaining)) }
+        } else { Text(TimerState.clock(context.state.remaining)).contentTransition(.numericText(countsDown: true)) }
     }
 }
 private struct ActivityGlassControl: ViewModifier {
