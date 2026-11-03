@@ -30,24 +30,27 @@ struct PanelView: View {
     private var clock: some View {
         let shown = untimed ? TimerState.clock(session.elapsed(at: store.now), roundsUp: false) : TimerState.clock(session.remaining(at: store.now))
         return VStack(spacing: 2) {
-            if untimed { nameField.padding(.bottom, 6) }
             Text(shown).font(.system(size: 56, weight: .light)).monospacedDigit().lineLimit(1).minimumScaleFactor(0.6)
                 .contentTransition(.numericText(countsDown: !untimed)).animation(reduceMotion ? nil : .snappy, value: shown)
                 .accessibilityLabel(untimed ? "Time elapsed" : "Time remaining").accessibilityValue(shown)
             Text(status ?? " ").font(.callout).foregroundStyle(.secondary)
+            if untimed { nameField.padding(.top, 2) }
         }
         .frame(maxWidth: .infinity).padding(.top, 4)
         // The mode switch only appears between sessions.
         .overlay(alignment: .topTrailing) { if !session.isActive { modeButton } }
     }
+    /// The optional name stays quiet under the time, like the iPhone's, and shows a field only while typing.
     private var nameField: some View {
-        TextField("Name this session", text: $store.draft)
-            .textFieldStyle(.plain).font(.title3.weight(.semibold)).multilineTextAlignment(.center)
+        // AppKit placeholders drop symbol images, so the prompt is words only.
+        TextField("Session name", text: $store.draft, prompt: Text("Add a name"))
+            .textFieldStyle(.plain).font(.callout.weight(store.draft.isEmpty ? .regular : .medium)).multilineTextAlignment(.center)
+            .foregroundStyle(naming ? .primary : .secondary)
             .focused($naming).onSubmit { naming = false }
             .onChange(of: naming) { _, focused in if !focused { store.commitDraft() } }
             .onChange(of: store.draft) { _, value in if value.count > 60 { store.draft = String(value.prefix(60)) } }
-            .padding(.horizontal, 12).frame(width: 196, height: 32)
-            .background(Color.primary.opacity(naming ? 0.1 : 0.06), in: Capsule())
+            .padding(.horizontal, 12).frame(width: 196, height: 26)
+            .background(Color.primary.opacity(naming ? 0.08 : 0), in: Capsule())
             .accessibilityLabel("Session name")
     }
     private var modeButton: some View {
